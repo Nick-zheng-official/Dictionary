@@ -1,0 +1,5285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vocabulary Management System</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>"
+    />
+    <style>
+      /* Welcome animation */
+      .welcome-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #1a1a1a;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+      }
+
+      .welcome-screen.show {
+        opacity: 1;
+      }
+
+      .welcome-screen.hide {
+        opacity: 0;
+      }
+
+      .welcome-title {
+        color: #00ffff;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .welcome-subtitle {
+        color: #e0e0e0;
+        font-size: 1.2rem;
+        text-align: center;
+      }
+
+      /* Login screen */
+      .login-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #2a2a2a;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .login-container.show {
+        display: block;
+        opacity: 1;
+      }
+
+      .login-title {
+        color: #00ffff;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .login-options {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .login-option {
+        padding: 15px;
+        background-color: #333;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: center;
+      }
+
+      .login-option:hover {
+        background-color: #444;
+      }
+
+      .login-option.admin {
+        border-left: 4px solid #ff5555;
+      }
+
+      .login-option.user {
+        border-left: 4px solid #55ff55;
+      }
+
+      .login-option.guest {
+        border-left: 4px solid #5555ff;
+      }
+
+      .login-form {
+        display: none;
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+
+      .login-form.show {
+        display: block;
+      }
+
+      .login-form input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        background-color: #444;
+        color: #fff;
+        border: 1px solid #555;
+        border-radius: 3px;
+      }
+
+      .login-form button {
+        width: 100%;
+        padding: 10px;
+        background-color: #0077ff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .login-form button:hover {
+        background-color: #0099ff;
+      }
+
+      /* User header */
+      .user-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .user-name {
+        color: #e0e0e0;
+        cursor: pointer;
+      }
+
+      /* Grid menu */
+      .grid-menu {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .grid-item {
+        background-color: #333;
+        padding: 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: transform 0.2s, background-color 0.2s;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .grid-item:hover {
+        transform: translateY(-5px);
+        background-color: #444;
+      }
+
+      .grid-item h3 {
+        color: #00ffff;
+        margin-bottom: 10px;
+      }
+
+      .grid-item p {
+        color: #e0e0e0;
+        font-size: 0.9rem;
+      }
+
+      /* Existing styles */
+      /* 新增背景选项样式 */
+      .background-options {
+        margin: 15px 0;
+      }
+      .background-option {
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        margin: 5px;
+        border: 2px solid #444;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .background-option:hover {
+        border-color: #0077ff;
+      }
+      .background-option.selected {
+        border-color: #00ff00;
+      }
+      #customBgUpload {
+        display: none;
+      }
+      .custom-bg-label {
+        display: inline-block;
+        padding: 8px 15px;
+        background-color: #0077ff;
+        color: white;
+        border-radius: 3px;
+        cursor: pointer;
+        margin: 10px 0;
+      }
+      .custom-bg-label:hover {
+        background-color: #0099ff;
+      }
+      body {
+        font-family: "Courier New", monospace;
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      #app {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #2a2a2a;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        display: none;
+      }
+      .title {
+        color: #00ffff;
+        text-align: center;
+        margin-bottom: 20px;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .separator {
+        border-top: 1px solid #0077ff;
+        margin: 15px 0;
+      }
+      .menu-item {
+        margin: 10px 0;
+        cursor: pointer;
+        padding: 5px;
+      }
+      .menu-item:hover {
+        background-color: #333;
+      }
+      .selected {
+        color: #00ff00;
+        font-weight: bold;
+        background-color: #333;
+      }
+      .input-container {
+        background-color: #333;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 15px 0;
+      }
+      input {
+        background-color: #444;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 8px;
+        width: calc(100% - 20px);
+        margin-bottom: 10px;
+        font-family: inherit;
+        border-radius: 3px;
+      }
+      textarea {
+        background-color: #444;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 8px;
+        width: calc(100% - 20px);
+        margin-bottom: 10px;
+        font-family: inherit;
+        border-radius: 3px;
+        min-height: 100px;
+        resize: vertical;
+        white-space: pre-wrap;
+      }
+      .button-group {
+        margin-top: 10px;
+      }
+      button {
+        background-color: #0077ff;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        margin-right: 5px;
+        cursor: pointer;
+        border-radius: 3px;
+        font-family: inherit;
+      }
+      button:hover {
+        background-color: #0099ff;
+      }
+      button.cancel {
+        background-color: #666;
+      }
+      button.cancel:hover {
+        background-color: #777;
+      }
+      .word-group {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+      .word-item {
+        display: inline-block;
+        margin: 5px;
+        padding: 5px 10px;
+        background-color: #444;
+        border-radius: 3px;
+      }
+      .correct {
+        color: #00ff00;
+      }
+      .incorrect {
+        color: #ff0000;
+      }
+      .status-bar {
+        margin-top: 15px;
+        padding: 8px;
+        background-color: #333;
+        font-size: 0.9em;
+        border-radius: 3px;
+      }
+      .quiz-question {
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+      .confirm-prompt {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #444;
+        border-radius: 5px;
+      }
+      .quiz-prompt {
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .file-input-container {
+        margin: 15px 0;
+      }
+      .file-input-label {
+        display: block;
+        margin-bottom: 10px;
+      }
+      .import-preview {
+        max-height: 200px;
+        overflow-y: auto;
+        background-color: #333;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+      .import-preview-item {
+        margin: 5px 0;
+        padding: 5px;
+        border-bottom: 1px solid #444;
+      }
+      .recycle-bin-item {
+        margin: 5px 0;
+        padding: 8px;
+        background-color: #444;
+        border-radius: 3px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .recycle-bin-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .bulletin-board {
+        margin: 15px 0;
+      }
+      .bulletin-item {
+        background-color: #333;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border-left: 3px solid #0077ff;
+        white-space: pre-wrap;
+      }
+      .bulletin-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #00ffff;
+      }
+      .bulletin-content {
+        margin-bottom: 5px;
+      }
+      .bulletin-meta {
+        font-size: 0.8em;
+        color: #999;
+        text-align: right;
+      }
+      .admin-controls {
+        margin-top: 10px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 5px;
+      }
+      .vocab-word {
+        margin: 5px 0;
+        padding: 8px;
+        background-color: #444;
+        border-radius: 3px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .word-status {
+        display: flex;
+        gap: 5px;
+      }
+      .status-btn {
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .status-known {
+        background-color: #00aa00;
+      }
+      .status-unknown {
+        background-color: #aa0000;
+      }
+      .status-unsure {
+        background-color: #aa5500;
+      }
+      .word-stats {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+      .analyze-progress {
+        margin-top: 10px;
+        height: 5px;
+        background-color: #444;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #0077ff;
+        width: 0%;
+        transition: width 0.3s;
+      }
+      .word-list {
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 15px 0;
+      }
+      .export-options {
+        margin: 15px 0;
+      }
+      .export-option {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #333;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .export-option:hover {
+        background-color: #444;
+      }
+      .export-option.selected {
+        background-color: #0077ff;
+      }
+      .recycle-bin-source {
+        font-size: 0.8em;
+        color: #aaa;
+        margin-top: 3px;
+      }
+      /* 新增日历和统计图表样式 */
+      .calendar-container {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #333;
+        border-radius: 5px;
+      }
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .calendar-nav {
+        display: flex;
+        gap: 10px;
+      }
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+      }
+      .calendar-day {
+        padding: 8px;
+        text-align: center;
+        background-color: #444;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      .calendar-day.empty {
+        background-color: transparent;
+        cursor: default;
+      }
+      .calendar-day.today {
+        border: 2px solid #00ffff;
+      }
+      .calendar-day.has-data {
+        background-color: #0077ff;
+      }
+      .calendar-day.efficient {
+        background-color: #00aa00;
+      }
+      .calendar-day.inefficient {
+        background-color: #aa0000;
+      }
+      .stats-container {
+        margin-top: 20px;
+      }
+      .stats-chart {
+        height: 200px;
+        margin-top: 15px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-around;
+      }
+      .chart-bar {
+        width: 30px;
+        background-color: #0077ff;
+        position: relative;
+        text-align: center;
+      }
+      .chart-bar.efficient {
+        background-color: #00aa00;
+      }
+      .chart-bar.inefficient {
+        background-color: #aa0000;
+      }
+      .chart-label {
+        position: absolute;
+        bottom: -25px;
+        width: 100%;
+        font-size: 0.8em;
+      }
+      .chart-value {
+        position: absolute;
+        top: -25px;
+        width: 100%;
+        font-size: 0.8em;
+      }
+      .day-details {
+        margin-top: 15px;
+        padding: 10px;
+        background-color: #444;
+        border-radius: 5px;
+      }
+      /* 在现有的日历样式后面添加 */
+      .calendar-day.no-data {
+        background-color: #aa0000;
+        opacity: 0.5;
+      }
+
+      .calendar-day > div {
+        margin: 2px 0;
+      }
+      .bulletin-title::after {
+        content: " ▼";
+        font-size: 0.8em;
+        opacity: 0.7;
+      }
+      .bulletin-title.collapsed::after {
+        content: " ▶";
+      }
+      /* Add to your existing CSS */
+      .user-name.admin {
+        color: #ff5555;
+        font-weight: bold;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20%,
+        60% {
+          transform: translateX(-5px);
+        }
+        40%,
+        80% {
+          transform: translateX(5px);
+        }
+      }
+
+      .login-error {
+        color: #ff5555;
+        text-align: center;
+        margin-top: 10px;
+        animation: fadeIn 0.3s;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcomeScreen">
+      <h1 class="welcome-title">Vocabulary Management System</h1>
+      <p class="welcome-subtitle">
+        Enhance your vocabulary learning experience
+      </p>
+    </div>
+
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+      <h2 class="login-title">Login to Vocabulary System</h2>
+      <div class="login-options">
+        <div class="login-option user" id="userLoginBtn">
+          <h3>User Login</h3>
+          <p>Login with your personal account</p>
+        </div>
+        <div class="login-option admin" id="adminLoginBtn">
+          <h3>Admin Login</h3>
+          <p>Access administrative features</p>
+        </div>
+        <div class="login-option guest" id="guestLoginBtn">
+          <h3>Continue as Guest</h3>
+          <p>Try the app without saving data</p>
+        </div>
+      </div>
+
+      <!-- User Login Form -->
+      <div class="login-form" id="userLoginForm">
+        <input type="text" id="userUsername" placeholder="Username" />
+        <input type="password" id="userPassword" placeholder="Password" />
+        <button id="userLoginSubmit">Login</button>
+        <p style="text-align: center; margin-top: 10px">
+          Don't have an account? Contact admin
+        </p>
+      </div>
+
+      <!-- Admin Login Form -->
+      <div class="login-form" id="adminLoginForm">
+        <input type="text" id="adminUsername" placeholder="Admin Username" />
+        <input
+          type="password"
+          id="adminPassword"
+          placeholder="Admin Password"
+        />
+        <button id="adminLoginSubmit">Login</button>
+        <!-- Error message will appear here -->
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app">
+      <div class="title">
+        <span>Vocabulary Management System v1.0.0</span>
+        <div class="user-header">
+          <span class="user-name" id="userNameDisplay">User</span>
+          <div class="user-avatar" id="userAvatar"></div>
+        </div>
+      </div>
+      <div class="separator"></div>
+
+      <!-- Grid Menu -->
+      <div class="grid-menu">
+        <!-- Word Groups -->
+        <div class="grid-item" id="wordGroupsBtn">
+          <h3>Word Groups</h3>
+          <p>Manage word groups and synonyms</p>
+        </div>
+
+        <!-- Vocabulary Status -->
+        <div class="grid-item" id="vocabStatusBtn">
+          <h3>Vocabulary Status</h3>
+          <p>Track known/unknown words</p>
+        </div>
+
+        <!-- Learning Calendar -->
+        <div class="grid-item" id="calendarBtn">
+          <h3>Learning Calendar</h3>
+          <p>Track your learning progress</p>
+        </div>
+
+        <!-- Settings & Others -->
+        <div class="grid-item" id="settingsBtn">
+          <h3>Settings & Others</h3>
+          <p>App settings and additional features</p>
+        </div>
+      </div>
+
+      <!-- Original Menu (hidden) -->
+      <div id="menu" style="display: none">
+        <div class="menu-item" data-choice="1">1. Add new words</div>
+        <div class="menu-item" data-choice="2">
+          2. Show word groups/synonyms
+        </div>
+        <div class="menu-item" data-choice="3">3. Vocabulary quiz</div>
+        <div class="menu-item" data-choice="4">4. Delete single word</div>
+        <div class="menu-item" data-choice="5">5. Exit program</div>
+        <div class="menu-item" data-choice="6">6. List all words</div>
+        <div class="menu-item" data-choice="7">7. Clear all words</div>
+        <div class="menu-item" data-choice="8">8. Delete entire word group</div>
+        <div class="menu-item" data-choice="9">9. Import TXT file</div>
+        <div class="menu-item" data-choice="10">10. Export TXT file</div>
+        <div class="menu-item" data-choice="11">11. Recycle Bin</div>
+        <div class="menu-item" data-choice="12">12. Bulletin Board</div>
+        <div class="menu-item" data-choice="13">
+          13. Analyze text for vocabulary
+        </div>
+        <div class="menu-item" data-choice="14">14. View known words</div>
+        <div class="menu-item" data-choice="15">15. View unknown words</div>
+        <div class="menu-item" data-choice="16">16. View unsure words</div>
+        <div class="menu-item" data-choice="17">17. Vocabulary Review</div>
+        <div class="menu-item" data-choice="18">18. Customize app</div>
+        <div class="menu-item" data-choice="19">19. Learning Calendar</div>
+      </div>
+
+      <div id="content"></div>
+
+      <div class="separator"></div>
+      <div id="status" class="status-bar">Ready</div>
+    </div>
+
+    <script>
+      // Constants
+      const N = 10000;
+      const DATA_KEY = "vocabulary_data";
+      const RECYCLE_BIN_KEY = "recycle_bin_data";
+      const BULLETIN_BOARD_KEY = "bulletin_board_data";
+      const VOCAB_STATS_KEY = "vocabulary_stats";
+      const USER_DATA_KEY = "user_data";
+      const CURRENT_USER_KEY = "current_user";
+      const CALENDAR_DATA_KEY = "learning_calendar_data";
+
+      // Update the ADMIN_PASSWORD constant to be an object with username and password
+      const ADMIN_PASSWORD = {
+        username: "Nick_zheng",
+        password: "nick20090120", // Simple password for demo purposes
+      };
+
+      // Data structures
+      let fa = Array(N)
+        .fill(0)
+        .map((_, i) => i);
+      let mp = new Map();
+      let vis = Array(N).fill(false);
+      let bac = Array(N).fill("");
+      let cnt = 0;
+      let recycleBin = [];
+      let bulletinBoard = [];
+      let vocabStats = {};
+      let calendarData = {};
+      let isAdmin = false;
+      let currentUser = null;
+      let usersData = {};
+
+      // DOM elements
+      const app = document.getElementById("app");
+      const menu = document.getElementById("menu");
+      const content = document.getElementById("content");
+      const statusBar = document.getElementById("status");
+      const welcomeScreen = document.getElementById("welcomeScreen");
+      const loginContainer = document.getElementById("loginContainer");
+      const userLoginBtn = document.getElementById("userLoginBtn");
+      const adminLoginBtn = document.getElementById("adminLoginBtn");
+      const guestLoginBtn = document.getElementById("guestLoginBtn");
+      const userLoginForm = document.getElementById("userLoginForm");
+      const adminLoginForm = document.getElementById("adminLoginForm");
+      const userLoginSubmit = document.getElementById("userLoginSubmit");
+      const adminLoginSubmit = document.getElementById("adminLoginSubmit");
+      const userNameDisplay = document.getElementById("userNameDisplay");
+      const userAvatar = document.getElementById("userAvatar");
+      const wordGroupsBtn = document.getElementById("wordGroupsBtn");
+      const vocabStatusBtn = document.getElementById("vocabStatusBtn");
+      const calendarBtn = document.getElementById("calendarBtn");
+      const settingsBtn = document.getElementById("settingsBtn");
+
+      // Current state
+      let currentChoice = null;
+      let currentQuestion = null;
+      let quizScore = 0;
+      let quizTotal = 0;
+      let currentRootWord = "";
+
+      // Initialize
+      init();
+
+      function init() {
+        // Ensure app is hidden initially
+        app.style.display = "none";
+        
+        // Load user data first
+        loadUserData();
+        
+        // Only show welcome screen if no user is logged in
+        if (!currentUser) {
+          showWelcomeScreen();
+        }
+
+        // Initialize event listeners for login screen
+        userLoginBtn.addEventListener("click", () => {
+          userLoginForm.classList.toggle("show");
+          adminLoginForm.classList.remove("show");
+        });
+
+        adminLoginBtn.addEventListener("click", () => {
+          adminLoginForm.classList.toggle("show");
+          userLoginForm.classList.remove("show");
+        });
+
+        guestLoginBtn.addEventListener("click", () => {
+          loginAsGuest();
+        });
+
+        userLoginSubmit.addEventListener("click", () => {
+          const username = document.getElementById("userUsername").value.trim();
+          const password = document.getElementById("userPassword").value.trim();
+
+          if (username && password) {
+            loginUser(username, password);
+          }
+        });
+
+        adminLoginSubmit.addEventListener("click", () => {
+          const username = document
+            .getElementById("adminUsername")
+            .value.trim();
+          const password = document
+            .getElementById("adminPassword")
+            .value.trim();
+
+          if (
+            username === ADMIN_PASSWORD.username &&
+            password === ADMIN_PASSWORD.password
+          ) {
+            loginAdmin();
+          } else {
+            updateStatus("Invalid admin credentials");
+          }
+        });
+
+        document
+          .getElementById("adminPassword")
+          .addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+              loginAdmin();
+            }
+          });
+        // Initialize grid menu buttons
+        wordGroupsBtn.addEventListener("click", () => {
+          showWordGroupsMenu();
+        });
+
+        vocabStatusBtn.addEventListener("click", () => {
+          showVocabStatusMenu();
+        });
+
+        calendarBtn.addEventListener("click", () => {
+          handleMenuChoice("19");
+        });
+
+        settingsBtn.addEventListener("click", () => {
+          showSettingsMenu();
+        });
+
+        // Initialize avatar click
+        userAvatar.addEventListener("click", showUserPreferences);
+        userNameDisplay.addEventListener("click", showUserPreferences);
+
+        // Initialize original menu items (hidden)
+        menu.querySelectorAll(".menu-item").forEach((item) => {
+          item.addEventListener("click", () =>
+            handleMenuChoice(item.dataset.choice)
+          );
+        });
+
+        // Load background settings
+        const savedColor = localStorage.getItem("vocab_bg_color");
+        const savedImage = localStorage.getItem("vocab_bg_image");
+        const savedOpacity = localStorage.getItem("vocab_bg_opacity");
+        const savedIcon = localStorage.getItem("vocab_custom_icon");
+
+        if (savedColor) {
+          document.body.style.background = savedColor;
+        } else if (savedImage) {
+          document.body.style.backgroundImage = `url(${savedImage})`;
+          document.body.style.backgroundSize = "cover";
+          document.body.style.backgroundAttachment = "fixed";
+        }
+
+        if (savedOpacity) {
+          document.body.style.opacity = `${savedOpacity / 100}`;
+        }
+
+        if (savedIcon) {
+          const link =
+            document.querySelector("link[rel~='icon']") ||
+            document.createElement("link");
+          link.rel = "icon";
+          link.href = savedIcon;
+          document.head.appendChild(link);
+        }
+
+        // Load data (will be loaded after user logs in)
+        updateStatus("System ready");
+      }
+
+      function showWelcomeScreen() {
+        welcomeScreen.classList.add("show");
+
+        // Add click-to-skip functionality
+        welcomeScreen.style.cursor = "pointer";
+        welcomeScreen.addEventListener("click", skipWelcomeScreen);
+
+        // After 3 seconds, fade out and show login
+        const welcomeTimeout = setTimeout(() => {
+          skipWelcomeScreen();
+        }, 3000);
+
+        function skipWelcomeScreen() {
+          welcomeScreen.removeEventListener("click", skipWelcomeScreen);
+          clearTimeout(welcomeTimeout);
+          welcomeScreen.classList.remove("show");
+          welcomeScreen.classList.add("hide");
+
+          setTimeout(() => {
+            welcomeScreen.style.display = "none";
+            loginContainer.classList.add("show");
+          }, 1000);
+        }
+      }
+
+      function loadUserData() {
+        const savedData = localStorage.getItem(USER_DATA_KEY);
+        if (savedData) {
+          try {
+            usersData = JSON.parse(savedData);
+          } catch (e) {
+            console.error("Error loading user data:", e);
+            usersData = {};
+          }
+        }
+
+        // Check if there's a current user
+        const currentUserData = localStorage.getItem(CURRENT_USER_KEY);
+        if (currentUserData) {
+          try {
+            currentUser = JSON.parse(currentUserData);
+            if (currentUser.username === ADMIN_PASSWORD.username) {
+              // 检查是否是管理员账号，使用loginUser处理
+              loginUser(currentUser.username, currentUser.password, true);
+            } else if (currentUser.guest) {
+              loginAsGuest();
+            } else if (usersData[currentUser.username]) {
+              loginUser(currentUser.username, currentUser.password, true);
+            }
+          } catch (e) {
+            console.error("Error loading current user:", e);
+          }
+        }
+      }
+
+      function saveUserData() {
+        try {
+          localStorage.setItem(USER_DATA_KEY, JSON.stringify(usersData));
+          if (currentUser) {
+            localStorage.setItem(
+              CURRENT_USER_KEY,
+              JSON.stringify({
+                username: currentUser.username,
+                password: currentUser.password,
+                guest: currentUser.guest || false,
+              })
+            );
+          }
+          return true;
+        } catch (e) {
+          console.error("Error saving user data:", e);
+          return false;
+        }
+      }
+
+      function loginUser(username, password, skipCheck = false) {
+        if (
+          skipCheck ||
+          (usersData[username] && usersData[username].password === password) ||
+          (username === ADMIN_PASSWORD.username &&
+            password === ADMIN_PASSWORD.password)
+        ) {
+          // 检查是否是管理员
+          const isThisAdmin =
+            (username === ADMIN_PASSWORD.username &&
+              password === ADMIN_PASSWORD.password) ||
+            (usersData[username] && usersData[username].isAdmin === true);
+
+          currentUser = {
+            username: username,
+            password: password,
+            guest: false,
+          };
+
+          isAdmin = isThisAdmin;
+
+          // Load user-specific data
+          loadData();
+
+          // Update UI with nickname if available, otherwise use username
+          const displayName = isThisAdmin
+            ? usersData[username]?.nickname || "Admin"
+            : usersData[username]?.nickname || username;
+          userNameDisplay.textContent = displayName;
+
+          // 添加管理员样式
+          if (isThisAdmin) {
+            userNameDisplay.classList.add("admin");
+          } else {
+            userNameDisplay.classList.remove("admin");
+          }
+
+          // Set avatar
+          if (usersData[username]?.avatarImage) {
+            userAvatar.innerHTML = "";
+            const img = document.createElement("img");
+            img.src = usersData[username].avatarImage;
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.borderRadius = "50%";
+            img.style.objectFit = "cover";
+            userAvatar.appendChild(img);
+          } else {
+            userAvatar.textContent = displayName.charAt(0).toUpperCase();
+            userAvatar.style.backgroundColor = isThisAdmin
+              ? "#ff5555"
+              : "#55ff55";
+          }
+
+          // Hide login, show app
+          loginContainer.classList.remove("show");
+          app.style.display = "block";
+
+          updateStatus(`Welcome ${displayName}!`);
+          saveUserData();
+          return true;
+        }
+
+        // Show error message
+        clearContent();
+        const errorMsg = document.createElement("p");
+        errorMsg.className = "incorrect";
+        errorMsg.textContent = "Invalid username or password";
+        loginContainer.appendChild(errorMsg);
+
+        updateStatus("Login failed");
+        return false;
+      }
+
+      function loginAdmin() {
+        const username = document.getElementById("adminUsername").value.trim();
+        const password = document.getElementById("adminPassword").value.trim();
+
+        // Clear any existing error messages
+        const existingError = adminLoginForm.querySelector(".login-error");
+        if (existingError) {
+          adminLoginForm.removeChild(existingError);
+        }
+
+        // 使用loginUser函数处理管理员登录
+        if (!loginUser(username, password)) {
+          // 登录失败时显示错误消息
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect login-error";
+          errorMsg.textContent = "Invalid username or password";
+          errorMsg.style.textAlign = "center";
+          errorMsg.style.marginTop = "10px";
+
+          adminLoginForm.appendChild(errorMsg);
+          updateStatus("Login failed");
+        }
+
+        // Shake animation for wrong credentials
+        adminLoginForm.style.animation = "shake 0.5s";
+        setTimeout(() => {
+          adminLoginForm.style.animation = "";
+        }, 500);
+      }
+
+      function loginAsGuest() {
+        currentUser = {
+          username: "Guest",
+          password: "",
+          guest: true,
+        };
+
+        // Use temporary data for guest
+        resetData();
+
+        // Update UI
+        userNameDisplay.textContent = "Guest";
+        userAvatar.textContent = "G";
+        userAvatar.style.backgroundColor = "#5555ff";
+
+        // Hide login, show app
+        loginContainer.classList.remove("show");
+        app.style.display = "block";
+
+        updateStatus("Logged in as guest (data won't be saved)");
+        saveUserData();
+      }
+
+      function logout() {
+        if (currentUser && currentUser.guest) {
+          // Clear guest data
+          resetData();
+        }
+
+        // Save current data if not guest
+        if (currentUser && !currentUser.guest) {
+          saveData();
+        }
+
+        // Reset UI
+        currentUser = null;
+        isAdmin = false;
+        localStorage.removeItem(CURRENT_USER_KEY);
+
+        // Clear login forms and reset UI
+        document.getElementById("userUsername").value = "";
+        document.getElementById("userPassword").value = "";
+        document.getElementById("adminUsername").value = "";
+        document.getElementById("adminPassword").value = "";
+
+        // Hide app and show login screen with clean state
+        app.style.display = "none";
+        welcomeScreen.style.display = "flex";
+        welcomeScreen.classList.remove("hide");
+        welcomeScreen.classList.add("show");
+        loginContainer.classList.remove("show");
+
+        // Reset user display
+        userNameDisplay.textContent = "User";
+        userNameDisplay.className = "user-name";
+        userAvatar.textContent = "U";
+        userAvatar.style.backgroundColor = "#55ff55";
+        userAvatar.innerHTML = "";
+
+        updateStatus("Logged out");
+
+        // After showing welcome screen, transition to login after delay
+        setTimeout(() => {
+          welcomeScreen.classList.remove("show");
+          welcomeScreen.classList.add("hide");
+          setTimeout(() => {
+            welcomeScreen.style.display = "none";
+            loginContainer.classList.add("show");
+          }, 1000);
+        }, 1000);
+      }
+
+      function showUserPreferences() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "User Preferences";
+        container.appendChild(title);
+
+        if (currentUser.guest) {
+          const guestMsg = document.createElement("p");
+          guestMsg.textContent = "Guest preferences are not saved.";
+          container.appendChild(guestMsg);
+        }
+
+        // Avatar customization
+        const avatarTitle = document.createElement("h4");
+        avatarTitle.textContent = "Avatar";
+        container.appendChild(avatarTitle);
+
+        const avatarPreview = document.createElement("div");
+        avatarPreview.style.width = "100px";
+        avatarPreview.style.height = "100px";
+        avatarPreview.style.borderRadius = "50%";
+        avatarPreview.style.backgroundColor = currentUser.guest
+          ? "#5555ff"
+          : isAdmin
+          ? "#ff5555"
+          : "#55ff55";
+        avatarPreview.style.display = "flex";
+        avatarPreview.style.alignItems = "center";
+        avatarPreview.style.justifyContent = "center";
+        avatarPreview.style.fontSize = "2.5rem";
+        avatarPreview.style.margin = "0 auto";
+        avatarPreview.style.cursor = "pointer";
+        avatarPreview.style.overflow = "hidden";
+        avatarPreview.textContent = userAvatar.textContent;
+        container.appendChild(avatarPreview);
+
+        // Avatar image upload
+        const avatarUpload = document.createElement("input");
+        avatarUpload.type = "file";
+        avatarUpload.accept = "image/*";
+        avatarUpload.style.display = "none";
+        avatarUpload.id = "avatarUpload";
+
+        const avatarUploadLabel = document.createElement("label");
+        avatarUploadLabel.htmlFor = "avatarUpload";
+        avatarUploadLabel.className = "custom-bg-label";
+        avatarUploadLabel.textContent = "Upload Avatar Image";
+        avatarUploadLabel.style.display = "block";
+        avatarUploadLabel.style.margin = "10px auto";
+        container.appendChild(avatarUploadLabel);
+        container.appendChild(avatarUpload);
+
+        avatarUpload.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const img = document.createElement("img");
+            img.src = e.target.result;
+            img.style.width = "100%";
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+
+            // Clear previous content and add new image
+            avatarPreview.innerHTML = "";
+            avatarPreview.appendChild(img);
+
+            if (!currentUser.guest) {
+              if (!usersData[currentUser.username]) {
+                usersData[currentUser.username] = {};
+              }
+              usersData[currentUser.username].avatarImage = e.target.result;
+              saveUserData();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+
+        // Nickname
+        const nicknameLabel = document.createElement("label");
+        nicknameLabel.textContent = "Nickname:";
+        container.appendChild(nicknameLabel);
+
+        const nicknameInput = document.createElement("input");
+        nicknameInput.type = "text";
+        nicknameInput.placeholder = "Enter nickname...";
+        nicknameInput.value = usersData[currentUser.username]?.nickname || "";
+        container.appendChild(nicknameInput);
+
+        // Signature
+        const signatureLabel = document.createElement("label");
+        signatureLabel.textContent = "Signature:";
+        container.appendChild(signatureLabel);
+
+        const signatureInput = document.createElement("input");
+        signatureInput.type = "text";
+        signatureInput.placeholder = "Enter signature...";
+        signatureInput.value = usersData[currentUser.username]?.signature || "";
+        container.appendChild(signatureInput);
+
+        // Daily study goal
+        const goalLabel = document.createElement("label");
+        goalLabel.textContent = "Daily Study Goal (minutes):";
+        container.appendChild(goalLabel);
+
+        const goalInput = document.createElement("input");
+        goalInput.type = "number";
+        goalInput.min = "5";
+        goalInput.value = usersData[currentUser.username]?.dailyGoal || 30;
+        container.appendChild(goalInput);
+
+        // Daily review goal
+        const reviewGoalLabel = document.createElement("label");
+        reviewGoalLabel.textContent = "Daily Review Goal (words):";
+        container.appendChild(reviewGoalLabel);
+
+        const reviewGoalInput = document.createElement("input");
+        reviewGoalInput.type = "number";
+        reviewGoalInput.min = "5";
+        reviewGoalInput.value =
+          usersData[currentUser.username]?.dailyReviewGoal || 20;
+        container.appendChild(reviewGoalInput);
+
+        // Save button
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "Save Preferences";
+        saveButton.addEventListener("click", () => {
+          userAvatar.textContent =
+            nicknameInput.value.charAt(0).toUpperCase() ||
+            userAvatar.textContent;
+
+          if (!currentUser.guest) {
+            if (!usersData[currentUser.username]) {
+              usersData[currentUser.username] = {};
+            }
+
+            usersData[currentUser.username].nickname =
+              nicknameInput.value.trim();
+            usersData[currentUser.username].signature =
+              signatureInput.value.trim();
+            usersData[currentUser.username].dailyGoal =
+              parseInt(goalInput.value) || 30;
+            usersData[currentUser.username].dailyReviewGoal =
+              parseInt(reviewGoalInput.value) || 20;
+
+            // Update avatar if image was uploaded
+            if (avatarPreview.querySelector("img")) {
+              usersData[currentUser.username].avatarImage =
+                avatarPreview.querySelector("img").src;
+            } else {
+              usersData[currentUser.username].avatar = {
+                text: userAvatar.textContent,
+                color:
+                  userAvatar.style.backgroundColor ||
+                  (isAdmin ? "#ff5555" : "#55ff55"),
+              };
+            }
+
+            saveUserData();
+
+            // Update UI
+            userNameDisplay.textContent =
+              nicknameInput.value.trim() || currentUser.username;
+          }
+
+          updateStatus("Preferences updated");
+        });
+        container.appendChild(saveButton);
+
+        // Logout button (now calls exit first)
+        const logoutButton = document.createElement("button");
+        logoutButton.textContent = "Logout";
+        logoutButton.className = "cancel";
+        logoutButton.addEventListener("click", () => {
+          exitProgram();
+          setTimeout(logout, 1000);
+        });
+        container.appendChild(logoutButton);
+
+        // Load saved avatar image if exists
+        if (
+          !currentUser.guest &&
+          usersData[currentUser.username]?.avatarImage
+        ) {
+          const img = document.createElement("img");
+          img.src = usersData[currentUser.username].avatarImage;
+          img.style.width = "100%";
+          img.style.height = "100%";
+          img.style.objectFit = "cover";
+          avatarPreview.innerHTML = "";
+          avatarPreview.appendChild(img);
+        }
+
+        content.appendChild(container);
+      }
+
+      function showWordGroupsMenu() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Word Groups Management";
+        container.appendChild(title);
+
+        const options = [
+          { choice: "1", text: "Add new words" },
+          { choice: "2", text: "Show word groups/synonyms" },
+          { choice: "3", text: "Vocabulary quiz" },
+          { choice: "4", text: "Delete single word" },
+          { choice: "6", text: "List all words" },
+          { choice: "7", text: "Clear all words" },
+          { choice: "8", text: "Delete entire word group" },
+        ];
+
+        options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.textContent = option.text;
+          btn.style.width = "100%";
+          btn.style.marginBottom = "10px";
+          btn.addEventListener("click", () => {
+            handleMenuChoice(option.choice);
+          });
+          container.appendChild(btn);
+        });
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back to Main Menu";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+        });
+        container.appendChild(backButton);
+
+        content.appendChild(container);
+      }
+
+      function showVocabStatusMenu() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Vocabulary Status Management";
+        container.appendChild(title);
+
+        // Add word status counts
+        const counts = getWordStatusCounts();
+        const statsDiv = document.createElement("div");
+        statsDiv.className = "word-stats";
+        statsDiv.innerHTML = `
+        <p>Total Known: ${counts.known}</p>
+        <p>Total Unknown: ${counts.unknown}</p>
+        <p>Total Unsure: ${counts.unsure}</p>
+        <div class="separator"></div>
+    `;
+        container.appendChild(statsDiv);
+
+        const options = [
+          { choice: "13", text: "Analyze text for vocabulary" },
+          { choice: "14", text: "View known words" },
+          { choice: "15", text: "View unknown words" },
+          { choice: "16", text: "View unsure words" },
+          { choice: "17", text: "Vocabulary Review" },
+        ];
+
+        options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.textContent = option.text;
+          btn.style.width = "100%";
+          btn.style.marginBottom = "10px";
+          btn.addEventListener("click", () => {
+            handleMenuChoice(option.choice);
+          });
+          container.appendChild(btn);
+        });
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back to Main Menu";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+        });
+        container.appendChild(backButton);
+
+        content.appendChild(container);
+      }
+
+      function showSettingsMenu() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Settings & Other Features";
+        container.appendChild(title);
+
+        const options = [
+          { choice: "5", text: "Exit program" },
+          { choice: "9", text: "Import TXT file" },
+          { choice: "10", text: "Export TXT file" },
+          { choice: "11", text: "Recycle Bin" },
+          { choice: "12", text: "Bulletin Board" },
+          { choice: "18", text: "Customize app" },
+          { choice: "20", text: "Join Us" },
+          { choice: "21", text: "Feedback" },
+        ];
+
+        options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.textContent = option.text;
+          btn.style.width = "100%";
+          btn.style.marginBottom = "10px";
+          btn.addEventListener("click", () => {
+            handleMenuChoice(option.choice);
+          });
+          container.appendChild(btn);
+        });
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back to Main Menu";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+        });
+        container.appendChild(backButton);
+
+        content.appendChild(container);
+      }
+
+      // Core functions
+      function find(x) {
+        return (fa[x] = fa[x] === x ? x : find(fa[x]));
+      }
+
+      function union_set(x, y) {
+        fa[find(x)] = find(y);
+      }
+
+      function clearContent() {
+        content.innerHTML = "";
+      }
+
+      function updateStatus(message) {
+        statusBar.textContent = message;
+      }
+
+      // Data storage functions
+      function loadData() {
+        if (currentUser && currentUser.guest) {
+          // Guest uses temporary data
+          resetData();
+          return;
+        }
+
+        // Load main vocabulary data
+        const userKey = currentUser
+          ? `${currentUser.username}_${DATA_KEY}`
+          : DATA_KEY;
+        const savedData = localStorage.getItem(userKey);
+        if (savedData) {
+          try {
+            const data = JSON.parse(savedData);
+            mp = new Map(data.mp);
+            fa = data.fa;
+            bac = data.bac;
+            cnt = data.cnt;
+
+            updateStatus("Vocabulary data loaded");
+          } catch (e) {
+            updateStatus("Error loading data, using empty dictionary");
+            console.error(e);
+          }
+        } else {
+          updateStatus("No vocabulary data found, using empty dictionary");
+        }
+
+        // Load recycle bin data
+        const userRecycleKey = currentUser
+          ? `${currentUser.username}_${RECYCLE_BIN_KEY}`
+          : RECYCLE_BIN_KEY;
+        const savedRecycleBin = localStorage.getItem(userRecycleKey);
+        if (savedRecycleBin) {
+          try {
+            recycleBin = JSON.parse(savedRecycleBin);
+            updateStatus("Recycle bin data loaded");
+          } catch (e) {
+            console.error("Error loading recycle bin:", e);
+            recycleBin = [];
+          }
+        }
+
+        // Load bulletin board data (shared for all users)
+        const savedBulletinBoard = localStorage.getItem(BULLETIN_BOARD_KEY);
+        if (savedBulletinBoard) {
+          try {
+            bulletinBoard = JSON.parse(savedBulletinBoard);
+            updateStatus("Bulletin board data loaded");
+          } catch (e) {
+            console.error("Error loading bulletin board:", e);
+            bulletinBoard = [];
+          }
+        }
+
+        // Load vocabulary stats
+        const userStatsKey = currentUser
+          ? `${currentUser.username}_${VOCAB_STATS_KEY}`
+          : VOCAB_STATS_KEY;
+        const savedVocabStats = localStorage.getItem(userStatsKey);
+        if (savedVocabStats) {
+          try {
+            vocabStats = JSON.parse(savedVocabStats);
+            updateStatus("Vocabulary stats loaded");
+          } catch (e) {
+            console.error("Error loading vocabulary stats:", e);
+            vocabStats = {};
+          }
+        }
+
+        // Load calendar data
+        const userCalendarKey = currentUser
+          ? `${currentUser.username}_calendar_data`
+          : "learning_calendar_data";
+        const savedCalendarData = localStorage.getItem(userCalendarKey);
+        if (savedCalendarData) {
+          try {
+            calendarData = JSON.parse(savedCalendarData);
+            updateStatus("Calendar data loaded");
+          } catch (e) {
+            console.error("Error loading calendar data:", e);
+            calendarData = {};
+          }
+        }
+      }
+
+      function resetData() {
+        mp = new Map();
+        cnt = 0;
+        for (let i = 0; i < N; i++) {
+          fa[i] = i;
+          bac[i] = "";
+        }
+        recycleBin = [];
+        vocabStats = {};
+        calendarData = {};
+        updateStatus("Using temporary data (guest mode)");
+      }
+
+      function cleanupEmptyGroups() {
+        const groupRoots = new Set();
+        const groups = new Map();
+
+        // Collect all group roots
+        for (const [word, id] of mp) {
+          const root = find(id);
+          groupRoots.add(root);
+
+          if (!groups.has(root)) {
+            groups.set(root, []);
+          }
+          groups.get(root).push(word);
+        }
+
+        // Check each group for members
+        for (const root of groupRoots) {
+          const groupWords = groups.get(root);
+          if (groupWords.length === 0) {
+            // This is an empty group, needs cleanup
+            for (let i = 1; i <= cnt; i++) {
+              if (find(i) === root) {
+                fa[i] = i; // Reset parent
+                bac[i] = ""; // Clear reverse mapping
+              }
+            }
+          }
+        }
+
+        // Re-count
+        cnt = 0;
+        const newMp = new Map();
+        for (const [word, id] of mp) {
+          if (bac[id] !== "") {
+            // Only keep valid mappings
+            newMp.set(word, id);
+            cnt = Math.max(cnt, id);
+          }
+        }
+        mp = newMp;
+      }
+
+      function saveData() {
+        if (currentUser && currentUser.guest) {
+          updateStatus("Guest data not saved");
+          return false;
+        }
+
+        cleanupEmptyGroups();
+
+        const data = {
+          mp: Array.from(mp.entries()),
+          fa: fa,
+          bac: bac,
+          cnt: cnt,
+        };
+
+        try {
+          const userKey = currentUser
+            ? `${currentUser.username}_${DATA_KEY}`
+            : DATA_KEY;
+          const userRecycleKey = currentUser
+            ? `${currentUser.username}_${RECYCLE_BIN_KEY}`
+            : RECYCLE_BIN_KEY;
+          const userStatsKey = currentUser
+            ? `${currentUser.username}_${VOCAB_STATS_KEY}`
+            : VOCAB_STATS_KEY;
+          const userCalendarKey = currentUser
+            ? `${currentUser.username}_calendar_data`
+            : "learning_calendar_data";
+
+          localStorage.setItem(userKey, JSON.stringify(data));
+          localStorage.setItem(userRecycleKey, JSON.stringify(recycleBin));
+          localStorage.setItem(
+            BULLETIN_BOARD_KEY,
+            JSON.stringify(bulletinBoard)
+          );
+          localStorage.setItem(userStatsKey, JSON.stringify(vocabStats));
+          localStorage.setItem(userCalendarKey, JSON.stringify(calendarData));
+
+          updateStatus("Data saved");
+          return true;
+        } catch (e) {
+          updateStatus("Error saving data");
+          console.error(e);
+          return false;
+        }
+      }
+
+      // Menu handler
+      function handleMenuChoice(choice) {
+        currentChoice = choice;
+
+        // Clear previous selection
+        menu.querySelectorAll(".menu-item").forEach((item) => {
+          item.classList.remove("selected");
+        });
+
+        // Highlight current selection
+        const selectedItem = document.querySelector(
+          `.menu-item[data-choice="${choice}"]`
+        );
+        if (selectedItem) {
+          selectedItem.classList.add("selected");
+        }
+
+        clearContent();
+
+        switch (choice) {
+          case "1":
+            showAddWords();
+            break;
+          case "2":
+            showFindGroup();
+            break;
+          case "3":
+            startQuiz();
+            break;
+          case "4":
+            showRemoveWord();
+            break;
+          case "5":
+            exitProgram();
+            break;
+          case "6":
+            showAllWords();
+            break;
+          case "7":
+            showClearAll();
+            break;
+          case "8":
+            showRemoveGroup();
+            break;
+          case "9":
+            showImportTxt();
+            break;
+          case "10":
+            showExportTxt();
+            break;
+          case "11":
+            showRecycleBin();
+            break;
+          case "12":
+            showBulletinBoard();
+            break;
+          case "13":
+            showTextAnalyzer();
+            break;
+          case "14":
+            showWordList("known");
+            break;
+          case "15":
+            showWordList("unknown");
+            break;
+          case "16":
+            showWordList("unsure");
+            break;
+          case "17":
+            showReviewSetup();
+            break;
+          case "18":
+            showBackgroundCustomizer();
+            break;
+          case "19":
+            showLearningCalendar();
+            break;
+          case "20":
+            // Join Us with contact information
+            const joinUsDiv = document.createElement("div");
+            joinUsDiv.className = "input-container";
+            joinUsDiv.innerHTML = `
+                    <h3>Join Us</h3>
+                    <p>We're always looking for enthusiastic contributors to help improve our dictionary system!</p>
+                    <div class="contact-info">
+                        <h4>Contact Us:</h4>
+                        <p><strong>Phone:</strong> 13012708819</p>
+                        <p><strong>Email:</strong> 2181927847@qq.com</p>
+                    </div>
+                    <div class="join-form">
+                        <h4>Interested in joining? Send us a message!</h4>
+                        <input type="text" id="contactName" placeholder="Your Name" style="margin-bottom: 10px; width: 100%;">
+                        <input type="email" id="contactEmail" placeholder="Your Email" style="margin-bottom: 10px; width: 100%;">
+                        <textarea id="contactMessage" placeholder="Tell us about yourself and why you want to join..." style="width: 100%; height: 100px; margin-bottom: 10px;"></textarea>
+                        <button id="sendContactBtn">Send Message</button>
+                    </div>
+                `;
+            content.appendChild(joinUsDiv);
+
+            // Add event listener for contact form
+            document
+              .getElementById("sendContactBtn")
+              .addEventListener("click", function () {
+                const name = document
+                  .getElementById("contactName")
+                  .value.trim();
+                const email = document
+                  .getElementById("contactEmail")
+                  .value.trim();
+                const message = document
+                  .getElementById("contactMessage")
+                  .value.trim();
+
+                if (name && email && message) {
+                  alert(
+                    "Thank you for your interest! We will get back to you soon."
+                  );
+                  updateStatus("Contact message sent");
+                } else {
+                  alert("Please fill in all fields");
+                }
+              });
+            break;
+          case "21":
+            // Feedback form
+            const feedbackDiv = document.createElement("div");
+            feedbackDiv.className = "input-container";
+            feedbackDiv.innerHTML = `
+                    <h3>Feedback</h3>
+                    <p>We value your feedback! Please help us improve our dictionary system.</p>
+                    
+                    <div class="feedback-form">
+                        <div style="margin-bottom: 15px;">
+                            <label for="feedbackType">Feedback Type:</label>
+                            <select id="feedbackType" style="width: 100%; margin-top: 5px;">
+                                <option value="suggestion">Suggestion</option>
+                                <option value="bug">Bug Report</option>
+                                <option value="question">Question</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="feedbackSubject">Subject:</label>
+                            <input type="text" id="feedbackSubject" placeholder="Brief description" style="width: 100%; margin-top: 5px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="feedbackMessage">Message:</label>
+                            <textarea id="feedbackMessage" placeholder="Please describe your feedback in detail..." style="width: 100%; height: 150px; margin-top: 5px;"></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label for="feedbackEmail">Your Email (Optional):</label>
+                            <input type="email" id="feedbackEmail" placeholder="For us to respond to you" style="width: 100%; margin-top: 5px;">
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label><input type="checkbox" id="allowContact"> Allow us to contact you regarding this feedback</label>
+                        </div>
+                        
+                        <button id="submitFeedbackBtn">Submit Feedback</button>
+                    </div>
+                `;
+            content.appendChild(feedbackDiv);
+
+            // Get existing feedback data from localStorage
+            let feedbackData = JSON.parse(localStorage.getItem('feedbackData') || '[]');
+            
+            // Add event listener for feedback form
+            document
+              .getElementById("submitFeedbackBtn")
+              .addEventListener("click", function () {
+                const type = document.getElementById("feedbackType").value;
+                const subject = document
+                  .getElementById("feedbackSubject")
+                  .value.trim();
+                const message = document
+                  .getElementById("feedbackMessage")
+                  .value.trim();
+                const email = document
+                  .getElementById("feedbackEmail")
+                  .value.trim();
+                const allowContact =
+                  document.getElementById("allowContact").checked;
+
+                if (subject && message) {
+                  // Create new feedback entry
+                  const newFeedback = {
+                      id: Date.now(),
+                      type: type,
+                      subject: subject,
+                      message: message,
+                      email: email,
+                      allowContact: allowContact,
+                      date: new Date().toLocaleString()
+                  };
+
+                  // Save feedback to localStorage
+                  feedbackData.push(newFeedback);
+                  localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+
+                  alert(
+                    "Thank you for your feedback! We appreciate your help in improving our system."
+                  );
+                  updateStatus("Feedback submitted successfully");
+                  
+                  // If admin, refresh feedback list
+                  if (isAdmin) {
+                      displayFeedbackList();
+                  }
+                } else {
+                  alert(
+                    "Please provide a subject and message for your feedback"
+                  );
+                }
+              });
+            
+            // Admin feedback viewing functionality
+            if (isAdmin) {
+                // Add admin section to view feedback
+                const adminSection = document.createElement('div');
+                adminSection.id = 'adminFeedbackSection';
+                adminSection.style = 'margin-top: 30px;';
+                adminSection.innerHTML = `
+                    <h3>Submitted Feedback</h3>
+                    <div id="feedbackList"></div>
+                `;
+                content.appendChild(adminSection);
+                
+                displayFeedbackList();
+            }
+            
+            // Function to display feedback list for admins
+            function displayFeedbackList() {
+                if (!isAdmin) return;
+                
+                const feedbackList = document.getElementById("feedbackList");
+                feedbackList.innerHTML = '';
+                
+                if (feedbackData.length === 0) {
+                    feedbackList.innerHTML = '<p>No feedback has been submitted yet.</p>';
+                    return;
+                }
+                
+                // Sort feedback by date (newest first)
+                feedbackData.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
+                feedbackData.forEach(feedback => {
+                    const feedbackItem = document.createElement('div');
+                    feedbackItem.className = 'feedback-item';
+                    feedbackItem.style = 'border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 5px;';
+                    
+                    feedbackItem.innerHTML = `
+                        <div style="font-weight: bold; color: #333;">${feedback.subject}</div>
+                        <div style="color: #666; font-size: 0.9em; margin-bottom: 10px;">
+                            Type: ${feedback.type} | Date: ${feedback.date}
+                            ${feedback.email ? ' | Email: ' + feedback.email : ''}
+                        </div>
+                        <div style="margin-bottom: 10px;">${feedback.message}</div>
+                        <button class="delete-feedback" data-id="${feedback.id}" style="background-color: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 3px;">Delete</button>
+                    `;
+                    
+                    feedbackList.appendChild(feedbackItem);
+                });
+                
+                // Add event listeners to delete buttons
+                document.querySelectorAll('.delete-feedback').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const feedbackId = parseInt(this.getAttribute('data-id'));
+                        feedbackData = feedbackData.filter(f => f.id !== feedbackId);
+                        localStorage.setItem('feedbackData', JSON.stringify(feedbackData));
+                        displayFeedbackList();
+                        updateStatus('Feedback deleted');
+                    });
+                });
+            }
+            break;
+          default:
+            updateStatus("Invalid choice");
+        }
+      }
+
+      // Input handling
+      function showInput(promptText, onSubmit, onCancel) {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const prompt = document.createElement("p");
+        prompt.textContent = promptText;
+        container.appendChild(prompt);
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Enter text...";
+        input.autocomplete = "off";
+        container.appendChild(input);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const submitButton = document.createElement("button");
+        submitButton.textContent = "Submit";
+        submitButton.addEventListener("click", () => {
+          const value = input.value.trim();
+          if (value) {
+            onSubmit(value);
+          }
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          if (onCancel) onCancel();
+          clearContent();
+          updateStatus("Operation canceled");
+        });
+
+        buttonGroup.appendChild(submitButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        input.focus();
+
+        // Add keyboard event
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            const value = input.value.trim();
+            if (value) {
+              onSubmit(value);
+            }
+          }
+        });
+      }
+
+      function showTextArea(promptText, onSubmit, onCancel) {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const prompt = document.createElement("p");
+        prompt.textContent = promptText;
+        container.appendChild(prompt);
+
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "Enter text...";
+        container.appendChild(textarea);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const submitButton = document.createElement("button");
+        submitButton.textContent = "Submit";
+        submitButton.addEventListener("click", () => {
+          const value = textarea.value.trim();
+          if (value) {
+            onSubmit(value);
+          }
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          if (onCancel) onCancel();
+          clearContent();
+          updateStatus("Operation canceled");
+        });
+
+        buttonGroup.appendChild(submitButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        textarea.focus();
+      }
+
+      // Feature implementations
+      function showAddWords() {
+        showInput("Enter root word:", (rootWord) => {
+          if (!mp.has(rootWord)) {
+            mp.set(rootWord, ++cnt);
+            bac[cnt] = rootWord;
+          }
+
+          currentRootWord = rootWord;
+          addRelatedWords();
+        });
+      }
+
+      function addRelatedWords() {
+        showInput("Enter related words (space separated):", (relatedWords) => {
+          const words = relatedWords.split(/\s+/).filter((w) => w);
+
+          for (let word of words) {
+            if (!mp.has(word)) {
+              mp.set(word, ++cnt);
+              bac[cnt] = word;
+            }
+
+            union_set(mp.get(currentRootWord), mp.get(word));
+          }
+
+          // Show added words
+          if (words.length > 0) {
+            const feedback = document.createElement("p");
+            feedback.textContent = `Added related words: ${words.join(", ")}`;
+            content.appendChild(feedback);
+          }
+
+          // Save data and show success message
+          if (saveData()) {
+            const successMsg = document.createElement("p");
+            successMsg.className = "correct";
+            successMsg.textContent = "Word associations saved successfully!";
+            content.appendChild(successMsg);
+          }
+        });
+      }
+
+      function showFindGroup() {
+        showInput("Enter a word to find its group:", (word) => {
+          if (mp.has(word)) {
+            const root = find(mp.get(word));
+            let group = [];
+
+            for (const [w, id] of mp) {
+              if (find(id) === root) {
+                group.push(w);
+              }
+            }
+
+            const resultDiv = document.createElement("div");
+
+            const title = document.createElement("h3");
+            title.textContent = `Words related to "${word}":`;
+            resultDiv.appendChild(title);
+
+            const wordGroup = document.createElement("div");
+            wordGroup.className = "word-group";
+
+            group.forEach((w) => {
+              const wordSpan = document.createElement("span");
+              wordSpan.className = "word-item";
+              wordSpan.textContent = w;
+              wordGroup.appendChild(wordSpan);
+            });
+
+            resultDiv.appendChild(wordGroup);
+            clearContent();
+            content.appendChild(resultDiv);
+
+            updateStatus(`Found ${group.length} related words`);
+          } else {
+            clearContent();
+            const errorMsg = document.createElement("p");
+            errorMsg.className = "incorrect";
+            errorMsg.textContent = "Word not found in dictionary";
+            content.appendChild(errorMsg);
+            updateStatus("Word not found");
+          }
+        });
+      }
+
+      function startQuiz() {
+        if (mp.size < 5) {
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect";
+          errorMsg.textContent =
+            "Not enough words in dictionary (minimum 5 required)";
+          content.appendChild(errorMsg);
+          updateStatus("Not enough words");
+          return;
+        }
+
+        quizScore = 0;
+        quizTotal = 0;
+        vis.fill(false);
+
+        clearContent();
+
+        const quizIntro = document.createElement("div");
+        quizIntro.innerHTML = `
+                <h3>Vocabulary Quiz (5 questions)</h3>
+                <p>Enter synonyms for each word:</p>
+                <p><span class="correct">Correct: +1 point</span>, <span class="incorrect">Wrong: -1 point</span></p>
+                <div class="separator"></div>
+            `;
+        content.appendChild(quizIntro);
+
+        askQuizQuestion(1);
+      }
+
+      function askQuizQuestion(questionNum) {
+        if (questionNum > 5) {
+          // Quiz finished
+          const resultDiv = document.createElement("div");
+          resultDiv.innerHTML = `
+                    <div class="separator"></div>
+                    <h3 class="${
+                      quizScore > 0
+                        ? "correct"
+                        : quizScore < 0
+                        ? "incorrect"
+                        : ""
+                    }">
+                        Quiz completed. Total score: ${quizScore} points
+                    </h3>
+                `;
+          content.appendChild(resultDiv);
+          updateStatus("Quiz completed");
+          return;
+        }
+
+        const size = mp.size;
+        let rd = Math.floor(Math.random() * size) + 1;
+        while (vis[rd]) {
+          rd = Math.floor(Math.random() * size) + 1;
+        }
+        vis[rd] = true;
+
+        currentQuestion = {
+          number: questionNum,
+          word: bac[rd],
+          root: find(rd),
+          score: 0,
+        };
+
+        const questionDiv = document.createElement("div");
+        questionDiv.className = "quiz-question";
+        questionDiv.innerHTML = `<h4>Question ${questionNum}: ${currentQuestion.word}</h4>`;
+        content.appendChild(questionDiv);
+
+        const promptDiv = document.createElement("div");
+        promptDiv.className = "quiz-prompt";
+        promptDiv.textContent = `Enter synonyms for "${currentQuestion.word}":`;
+        content.appendChild(promptDiv);
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Enter synonyms...";
+        input.autocomplete = "off";
+        container.appendChild(input);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const submitButton = document.createElement("button");
+        submitButton.textContent = "Submit";
+        submitButton.addEventListener("click", () => {
+          const value = input.value.trim();
+          if (value) {
+            handleQuizAnswer(value);
+          }
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel Quiz";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Quiz canceled");
+        });
+
+        buttonGroup.appendChild(submitButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        input.focus();
+
+        // Add keyboard event
+        input.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            const value = input.value.trim();
+            if (value) {
+              handleQuizAnswer(value);
+            }
+          }
+        });
+      }
+
+      function handleQuizAnswer(answer) {
+        const words = answer.split(/\s+/).filter((w) => w);
+        let questionScore = 0;
+        let feedback = "";
+
+        for (let ans of words) {
+          if (mp.has(ans) && find(mp.get(ans)) === currentQuestion.root) {
+            if (ans !== currentQuestion.word) {
+              questionScore++;
+              feedback += `<span class="correct">✓ ${ans} correct! </span>`;
+            }
+          } else {
+            questionScore--;
+            feedback += `<span class="incorrect">✗ ${ans} wrong! </span>`;
+          }
+        }
+
+        const scoreClass = questionScore > 0 ? "correct" : "incorrect";
+        const resultDiv = document.createElement("div");
+        resultDiv.innerHTML = `
+                ${feedback}
+                <p>Question score: <span class="${scoreClass}">${questionScore} points</span></p>
+                <div class="separator"></div>
+            `;
+        content.appendChild(resultDiv);
+
+        quizScore += questionScore;
+        askQuizQuestion(currentQuestion.number + 1);
+      }
+
+      // 修改 showRemoveWord() 函数
+      function showRemoveWord() {
+        showInput("Enter word to delete from word groups:", (word) => {
+          if (!mp.has(word)) {
+            clearContent();
+            const errorMsg = document.createElement("p");
+            errorMsg.className = "incorrect";
+            errorMsg.textContent = "Word not found in word groups";
+            content.appendChild(errorMsg);
+
+            const backButton = document.createElement("button");
+            backButton.textContent = "Back";
+            backButton.className = "cancel";
+            backButton.addEventListener("click", () => {
+              handleMenuChoice("4");
+            });
+            content.appendChild(backButton);
+            return;
+          }
+
+          // 核心保护逻辑：检查是否在状态列表
+          const status = vocabStats[word];
+          const statusNote = status
+            ? `\n\n⚠️ Note: This word is marked as "${status}" in your vocab list. ` +
+              `It will ONLY be removed from word groups.`
+            : "";
+
+          showConfirm(
+            `Delete "${word}" from word groups?${statusNote}`,
+            (confirmed) => {
+              if (!confirmed) return;
+
+              // 仅操作word groups系统
+              const root = find(mp.get(word));
+              const deletedWords = [];
+
+              // 记录要删除的组
+              for (const [w, id] of mp) {
+                if (find(id) === root) {
+                  deletedWords.push(w);
+                  mp.delete(w); // 仅删除主单词组记录
+                }
+              }
+
+              // 保存到回收站（注明不影响状态）
+              recycleBin.push({
+                word: word,
+                group: deletedWords,
+                timestamp: new Date().toISOString(),
+                source: `Deleted from word groups (status kept as ${
+                  status || "none"
+                })`,
+              });
+
+              saveData();
+
+              // 显示结果（明确提示状态保留）
+              clearContent();
+              const result = document.createElement("div");
+              result.innerHTML = `
+                <p class="correct">"${word}" removed from word groups</p>
+                ${status ? `<p>Its "${status}" status was preserved.</p>` : ""}
+                <button onclick="handleMenuChoice('${currentChoice}')">Continue</button>
+            `;
+              content.appendChild(result);
+            }
+          );
+        });
+      }
+      function getStatusViewName(choice) {
+        switch (choice) {
+          case "14":
+            return "known";
+          case "15":
+            return "unknown";
+          case "16":
+            return "unsure";
+          default:
+            return "";
+        }
+      }
+
+      function showClearAll() {
+        showConfirm(
+          "Warning: This will reset all word groups (not vocabulary status)! Confirm?",
+          (confirmed) => {
+            if (confirmed) {
+              // Save current word groups to recycle bin
+              const allWords = Array.from(mp.keys());
+              if (allWords.length > 0) {
+                recycleBin.push({
+                  word: "ALL_WORDS",
+                  group: allWords,
+                  timestamp: new Date().toISOString(),
+                  source: "Clear all word groups",
+                });
+              }
+
+              // Only clear word groups, not vocab stats
+              mp.clear();
+              cnt = 0;
+              for (let i = 0; i < N; i++) {
+                fa[i] = i;
+                bac[i] = "";
+              }
+
+              saveData();
+              clearContent();
+              const successMsg = document.createElement("p");
+              successMsg.className = "correct";
+              successMsg.textContent =
+                "All word groups cleared (vocabulary status preserved)";
+              content.appendChild(successMsg);
+            } else {
+              clearContent();
+              const cancelMsg = document.createElement("p");
+              cancelMsg.textContent = "Operation canceled";
+              content.appendChild(cancelMsg);
+            }
+          }
+        );
+      }
+
+      function showRemoveGroup() {
+        showInput("Enter any word from the group:", (word) => {
+          if (!mp.has(word)) {
+            clearContent();
+            const errorMsg = document.createElement("p");
+            errorMsg.className = "incorrect";
+            errorMsg.textContent = "Word not found in dictionary";
+            content.appendChild(errorMsg);
+            return;
+          }
+
+          const root = find(mp.get(word));
+          const groupWords = [];
+
+          for (const [w, id] of mp) {
+            if (find(id) === root) {
+              groupWords.push(w);
+            }
+          }
+
+          clearContent();
+
+          const warningDiv = document.createElement("div");
+          warningDiv.innerHTML = `
+                    <p class="incorrect">The following words will be deleted:</p>
+                    <div class="word-group">
+                        ${groupWords
+                          .map((w) => `<span class="word-item">${w}</span>`)
+                          .join("")}
+                    </div>
+                `;
+          content.appendChild(warningDiv);
+
+          showConfirm("Confirm deletion of entire word group?", (confirmed) => {
+            if (confirmed) {
+              // Save to recycle bin before deleting
+              recycleBin.push({
+                word: word,
+                group: groupWords,
+                timestamp: new Date().toISOString(),
+                source: "Word group deletion",
+              });
+
+              for (const w of groupWords) {
+                mp.delete(w);
+                // Don't remove from vocab stats - they are separate systems
+              }
+              saveData();
+              clearContent();
+              const successMsg = document.createElement("p");
+              successMsg.className = "correct";
+              successMsg.textContent = "Word group deleted successfully";
+              content.appendChild(successMsg);
+            } else {
+              clearContent();
+              const cancelMsg = document.createElement("p");
+              cancelMsg.textContent = "Deletion canceled";
+              content.appendChild(cancelMsg);
+            }
+          });
+        });
+      }
+
+      function showAllWords() {
+        const printedGroups = new Set();
+        let totalWords = 0;
+
+        clearContent();
+
+        const title = document.createElement("h3");
+        title.textContent = "Dictionary Contents";
+        content.appendChild(title);
+
+        // 创建滚动容器
+        const scrollContainer = document.createElement("div");
+        scrollContainer.className = "word-list";
+        scrollContainer.style.maxHeight = "500px";
+        scrollContainer.style.overflowY = "auto";
+        scrollContainer.style.margin = "15px 0";
+
+        for (let i = 1; i <= cnt; i++) {
+          if (!mp.has(bac[i])) continue;
+
+          const root = find(i);
+          if (printedGroups.has(root)) continue;
+
+          // 检查这个组是否有单词
+          let hasWords = false;
+          for (const [w, id] of mp) {
+            if (find(id) === root) {
+              hasWords = true;
+              break;
+            }
+          }
+
+          if (!hasWords) continue;
+
+          printedGroups.add(root);
+
+          const groupTitle = document.createElement("h4");
+          groupTitle.textContent = `Word Group #${printedGroups.size}:`;
+          scrollContainer.appendChild(groupTitle);
+
+          const wordGroup = document.createElement("div");
+          wordGroup.className = "word-group";
+
+          for (const [w, id] of mp) {
+            if (find(id) === root) {
+              const wordSpan = document.createElement("span");
+              wordSpan.className = "word-item";
+              wordSpan.textContent = w;
+              wordGroup.appendChild(wordSpan);
+              totalWords++;
+            }
+          }
+
+          scrollContainer.appendChild(wordGroup);
+        }
+
+        content.appendChild(scrollContainer);
+
+        const summaryDiv = document.createElement("div");
+        summaryDiv.innerHTML = `
+        <div class="separator"></div>
+        <p>Total: ${totalWords} words, ${printedGroups.size} word groups</p>
+    `;
+        content.appendChild(summaryDiv);
+
+        updateStatus("Displaying all words");
+      }
+
+      function showImportTxt() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Import TXT File";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent = "Select import type:";
+        container.appendChild(instructions);
+
+        const optionsDiv = document.createElement("div");
+        optionsDiv.className = "export-options";
+
+        // Option 1: Import word groups
+        const option1 = document.createElement("div");
+        option1.className = "export-option";
+        option1.innerHTML = `
+        <h4>Word Groups</h4>
+        <p>One word group per line, words separated by spaces</p>
+    `;
+        option1.addEventListener("click", () => {
+          showImportWordGroups();
+        });
+
+        // Option 2: Import vocabulary stats
+        const option2 = document.createElement("div");
+        option2.className = "export-option";
+        option2.innerHTML = `
+        <h4>Vocabulary Stats</h4>
+        <p>One word per line with status (format: word:status)</p>
+    `;
+        option2.addEventListener("click", () => {
+          showImportVocabStats();
+        });
+
+        // Option 3: Import user accounts (admin only)
+        if (isAdmin) {
+          const option3 = document.createElement("div");
+          option3.className = "export-option";
+          option3.innerHTML = `
+            <h4>User Accounts</h4>
+            <p>One account per line (format: username:password:isAdmin)</p>
+        `;
+          option3.addEventListener("click", () => {
+            showImportUserAccounts();
+          });
+          optionsDiv.appendChild(option3);
+        }
+
+        optionsDiv.appendChild(option1);
+        optionsDiv.appendChild(option2);
+        container.appendChild(optionsDiv);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Import canceled");
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+        updateStatus("Select import type");
+      }
+
+      function showImportWordGroups() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Import Word Groups";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent =
+          "Select a TXT file (one word group per line, words separated by spaces):";
+        container.appendChild(instructions);
+
+        const fileInputContainer = document.createElement("div");
+        fileInputContainer.className = "file-input-container";
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".txt";
+        fileInput.id = "txtFileInput";
+
+        const previewDiv = document.createElement("div");
+        previewDiv.className = "import-preview";
+        previewDiv.id = "importPreview";
+        previewDiv.style.display = "none";
+
+        fileInput.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            const lines = content.split("\n").filter((line) => line.trim());
+
+            // Show preview
+            previewDiv.innerHTML = "";
+            previewDiv.style.display = "block";
+
+            const previewTitle = document.createElement("p");
+            previewTitle.textContent = `Will import ${lines.length} word groups:`;
+            previewDiv.appendChild(previewTitle);
+
+            lines.forEach((line, index) => {
+              const words = line.trim().split(/\s+/);
+              const previewItem = document.createElement("div");
+              previewItem.className = "import-preview-item";
+              previewItem.textContent = `Group ${index + 1}: ${words.join(
+                ", "
+              )}`;
+              previewDiv.appendChild(previewItem);
+            });
+
+            // Add import button
+            const importButton = document.createElement("button");
+            importButton.textContent = "Import Data";
+            importButton.addEventListener("click", () => {
+              importWordsFromTxt(lines);
+            });
+
+            const cancelButton = document.createElement("button");
+            cancelButton.textContent = "Cancel";
+            cancelButton.className = "cancel";
+            cancelButton.addEventListener("click", () => {
+              clearContent();
+              updateStatus("Import canceled");
+            });
+
+            const buttonGroup = document.createElement("div");
+            buttonGroup.className = "button-group";
+            buttonGroup.appendChild(importButton);
+            buttonGroup.appendChild(cancelButton);
+
+            container.appendChild(buttonGroup);
+          };
+          reader.readAsText(file);
+        });
+
+        fileInputContainer.appendChild(fileInput);
+        container.appendChild(fileInputContainer);
+        container.appendChild(previewDiv);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showImportTxt();
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+        updateStatus("Select TXT file to import");
+      }
+
+      function showImportVocabStats() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Import Vocabulary Stats";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent =
+          'Select a TXT file (one word per line with status, format: word:status). Status can be "known", "unknown", or "unsure":';
+        container.appendChild(instructions);
+
+        const fileInputContainer = document.createElement("div");
+        fileInputContainer.className = "file-input-container";
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".txt";
+        fileInput.id = "txtFileInput";
+
+        const previewDiv = document.createElement("div");
+        previewDiv.className = "import-preview";
+        previewDiv.id = "importPreview";
+        previewDiv.style.display = "none";
+
+        fileInput.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            const lines = content.split("\n").filter((line) => line.trim());
+
+            // Show preview
+            previewDiv.innerHTML = "";
+            previewDiv.style.display = "block";
+
+            const previewTitle = document.createElement("p");
+            previewTitle.textContent = `Found ${lines.length} vocabulary entries:`;
+            previewDiv.appendChild(previewTitle);
+
+            let validEntries = 0;
+
+            lines.forEach((line, index) => {
+              const [word, status] = line.trim().split(":");
+              const previewItem = document.createElement("div");
+              previewItem.className = "import-preview-item";
+
+              if (
+                word &&
+                status &&
+                ["known", "unknown", "unsure"].includes(status)
+              ) {
+                previewItem.innerHTML = `<span class="correct">✓</span> ${word}: ${status}`;
+                validEntries++;
+              } else {
+                previewItem.innerHTML = `<span class="incorrect">✗</span> Invalid format: ${line}`;
+              }
+              previewDiv.appendChild(previewItem);
+            });
+
+            // Add import button only if valid entries found
+            if (validEntries > 0) {
+              const importButton = document.createElement("button");
+              importButton.textContent = `Import ${validEntries} Valid Entries`;
+              importButton.addEventListener("click", () => {
+                importVocabStatsFromTxt(lines);
+              });
+
+              const cancelButton = document.createElement("button");
+              cancelButton.textContent = "Cancel";
+              cancelButton.className = "cancel";
+              cancelButton.addEventListener("click", () => {
+                clearContent();
+                updateStatus("Import canceled");
+              });
+
+              const buttonGroup = document.createElement("div");
+              buttonGroup.className = "button-group";
+              buttonGroup.appendChild(importButton);
+              buttonGroup.appendChild(cancelButton);
+
+              // Clear previous buttons if any
+              const oldButtonGroup = container.querySelector(".button-group");
+              if (oldButtonGroup) {
+                container.removeChild(oldButtonGroup);
+              }
+
+              container.appendChild(buttonGroup);
+            } else {
+              const errorMsg = document.createElement("p");
+              errorMsg.className = "incorrect";
+              errorMsg.textContent = "No valid entries found in the file";
+              previewDiv.appendChild(errorMsg);
+            }
+          };
+          reader.readAsText(file);
+        });
+
+        fileInputContainer.appendChild(fileInput);
+        container.appendChild(fileInputContainer);
+        container.appendChild(previewDiv);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showImportTxt();
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+        updateStatus("Select TXT file to import vocabulary stats");
+      }
+
+      function showImportUserAccounts() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Import User Accounts";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent =
+          "Select a TXT file (one account per line, format: username:password:isAdmin):";
+        container.appendChild(instructions);
+
+        const formatExample = document.createElement("p");
+        formatExample.style.fontSize = "0.8em";
+        formatExample.style.color = "#aaa";
+        formatExample.textContent =
+          "Example: user1:pass123:false (for regular user) or admin1:pass456:true (for admin)";
+        container.appendChild(formatExample);
+
+        const fileInputContainer = document.createElement("div");
+        fileInputContainer.className = "file-input-container";
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".txt";
+        fileInput.id = "userAccountsFileInput";
+
+        const previewDiv = document.createElement("div");
+        previewDiv.className = "import-preview";
+        previewDiv.id = "importPreview";
+        previewDiv.style.display = "none";
+
+        fileInput.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const content = e.target.result;
+            const lines = content.split("\n").filter((line) => line.trim());
+
+            // Show preview
+            previewDiv.innerHTML = "";
+            previewDiv.style.display = "block";
+
+            const previewTitle = document.createElement("p");
+            previewTitle.textContent = `Found ${lines.length} accounts to import:`;
+            previewDiv.appendChild(previewTitle);
+
+            let validAccounts = 0;
+
+            lines.forEach((line, index) => {
+              const [username, password] = line.trim().split(":");
+              const previewItem = document.createElement("div");
+              previewItem.className = "import-preview-item";
+
+              if (username && password) {
+                previewItem.innerHTML = `<span class="correct">✓</span> ${username}`;
+                validAccounts++;
+              } else {
+                previewItem.innerHTML = `<span class="incorrect">✗</span> Invalid format: ${line}`;
+              }
+              previewDiv.appendChild(previewItem);
+            });
+
+            if (validAccounts > 0) {
+              const importButton = document.createElement("button");
+              importButton.textContent = `Import ${validAccounts} Accounts`;
+              importButton.addEventListener("click", () => {
+                importUserAccountsFromTxt(lines);
+              });
+
+              const buttonGroup = document.createElement("div");
+              buttonGroup.className = "button-group";
+              buttonGroup.appendChild(importButton);
+
+              // Clear previous buttons if any
+              const oldButtonGroup = container.querySelector(".button-group");
+              if (oldButtonGroup) {
+                container.removeChild(oldButtonGroup);
+              }
+
+              container.appendChild(buttonGroup);
+            } else {
+              const errorMsg = document.createElement("p");
+              errorMsg.className = "incorrect";
+              errorMsg.textContent = "No valid accounts found in the file";
+              previewDiv.appendChild(errorMsg);
+            }
+          };
+          reader.readAsText(file);
+        });
+
+        fileInputContainer.appendChild(fileInput);
+        container.appendChild(fileInputContainer);
+        container.appendChild(previewDiv);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showImportTxt();
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+        updateStatus("Select TXT file to import user accounts");
+      }
+
+      function importUserAccountsFromTxt(lines) {
+        let importedAccounts = 0;
+
+        for (const line of lines) {
+          const [username, password, isAdmin] = line.trim().split(":");
+          if (username && password) {
+            if (!usersData[username]) {
+              usersData[username] = {
+                password: password,
+                isAdmin: isAdmin === "true",
+                timestamp: new Date().toISOString(),
+              };
+              importedAccounts++;
+            }
+          }
+        }
+
+        if (saveUserData()) {
+          clearContent();
+          const successMsg = document.createElement("p");
+          successMsg.className = "correct";
+          successMsg.textContent = `Successfully imported ${importedAccounts} user accounts`;
+          content.appendChild(successMsg);
+          updateStatus("Import completed");
+        } else {
+          clearContent();
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect";
+          errorMsg.textContent = "Error during import";
+          content.appendChild(errorMsg);
+          updateStatus("Import failed");
+        }
+      }
+      function importVocabStatsFromTxt(lines) {
+        let importedStats = 0;
+
+        for (const line of lines) {
+          const [word, status] = line.trim().split(":");
+          if (
+            word &&
+            status &&
+            ["known", "unknown", "unsure"].includes(status)
+          ) {
+            vocabStats[word] = status;
+            importedStats++;
+          }
+        }
+
+        if (saveData()) {
+          clearContent();
+          const successMsg = document.createElement("p");
+          successMsg.className = "correct";
+          successMsg.textContent = `Successfully imported ${importedStats} vocabulary stats`;
+          content.appendChild(successMsg);
+          updateStatus("Import completed");
+        } else {
+          clearContent();
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect";
+          errorMsg.textContent = "Error during import";
+          content.appendChild(errorMsg);
+          updateStatus("Import failed");
+        }
+      }
+
+      function importWordsFromTxt(lines) {
+        let importedGroups = 0;
+        let importedWords = 0;
+
+        for (const line of lines) {
+          const words = line
+            .trim()
+            .split(/\s+/)
+            .filter((w) => w);
+          if (words.length === 0) continue;
+
+          // First word as root
+          const rootWord = words[0];
+          if (!mp.has(rootWord)) {
+            mp.set(rootWord, ++cnt);
+            bac[cnt] = rootWord;
+          }
+
+          // Associate other words
+          for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            if (!mp.has(word)) {
+              mp.set(word, ++cnt);
+              bac[cnt] = word;
+            }
+            union_set(mp.get(rootWord), mp.get(word));
+            importedWords++;
+          }
+
+          importedGroups++;
+        }
+
+        if (saveData()) {
+          clearContent();
+          const successMsg = document.createElement("p");
+          successMsg.className = "correct";
+          successMsg.textContent = `Successfully imported ${importedGroups} word groups, ${importedWords} associated words`;
+          content.appendChild(successMsg);
+          updateStatus("Import completed");
+        } else {
+          clearContent();
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect";
+          errorMsg.textContent = "Error during import";
+          content.appendChild(errorMsg);
+          updateStatus("Import failed");
+        }
+      }
+
+      function showExportTxt() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Export TXT File";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent = "Select export type:";
+        container.appendChild(instructions);
+
+        const optionsDiv = document.createElement("div");
+        optionsDiv.className = "export-options";
+
+        // Option 1: Export word groups
+        const option1 = document.createElement("div");
+        option1.className = "export-option";
+        option1.innerHTML = `
+            <h4>Word Groups</h4>
+            <p>Export all word groups (one group per line)</p>
+        `;
+        option1.addEventListener("click", () => {
+          exportAllGroups();
+        });
+
+        // Option 2: Export vocabulary stats
+        const option2 = document.createElement("div");
+        option2.className = "export-option";
+        option2.innerHTML = `
+            <h4>Vocabulary Stats</h4>
+            <p>Export known/unknown/unsure words (one word per line with status)</p>
+        `;
+        option2.addEventListener("click", () => {
+          exportVocabStats();
+        });
+
+        if (isAdmin) {
+          const option3 = document.createElement("div");
+          option3.className = "export-option";
+          option3.innerHTML = `
+        <h4>User Accounts</h4>
+        <p>Export all user accounts (format: username:password:isAdmin)</p>
+    `;
+          option3.addEventListener("click", () => {
+            exportUserAccounts();
+          });
+          optionsDiv.appendChild(option3);
+        }
+
+        optionsDiv.appendChild(option1);
+        optionsDiv.appendChild(option2);
+        container.appendChild(optionsDiv);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Export canceled");
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+        updateStatus("Select export type");
+      }
+
+      function exportUserAccounts() {
+        clearContent();
+
+        // Prepare export content
+        let exportContent = "";
+        for (const [username, userData] of Object.entries(usersData)) {
+          exportContent += `${username}:${userData.password}:${
+            userData.isAdmin || false
+          }\n`;
+        }
+
+        // Create download link
+        const blob = new Blob([exportContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "user_accounts_export.txt";
+
+        // Show UI
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Export User Accounts";
+        container.appendChild(title);
+
+        const countMsg = document.createElement("p");
+        countMsg.textContent = `Ready to export ${
+          Object.keys(usersData).length
+        } user accounts`;
+        container.appendChild(countMsg);
+
+        const formatInfo = document.createElement("p");
+        formatInfo.style.fontSize = "0.8em";
+        formatInfo.style.color = "#aaa";
+        formatInfo.textContent =
+          "Format: username:password:isAdmin (true/false)";
+        container.appendChild(formatInfo);
+
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "Download TXT File";
+        downloadButton.addEventListener("click", () => {
+          a.click();
+          URL.revokeObjectURL(url);
+
+          const doneMsg = document.createElement("p");
+          doneMsg.className = "correct";
+          doneMsg.textContent = "Export completed!";
+          container.appendChild(doneMsg);
+        });
+        container.appendChild(downloadButton);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showExportTxt();
+        });
+        container.appendChild(backButton);
+
+        content.appendChild(container);
+        updateStatus("Ready to export user accounts");
+      }
+
+      function exportAllGroups() {
+        const printedGroups = new Set();
+        let exportContent = "";
+
+        for (let i = 1; i <= cnt; i++) {
+          if (!mp.has(bac[i])) continue;
+
+          const root = find(i);
+          if (printedGroups.has(root)) continue;
+          printedGroups.add(root);
+
+          const groupWords = [];
+          for (const [w, id] of mp) {
+            if (find(id) === root) {
+              groupWords.push(w);
+            }
+          }
+
+          exportContent += groupWords.join(" ") + "\n\n"; // Add extra newline between groups
+        }
+
+        // Create download link
+        const blob = new Blob([exportContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "all_word_groups.txt";
+
+        clearContent();
+
+        const successDiv = document.createElement("div");
+        successDiv.innerHTML = `
+            <p class="correct">Ready to export ${printedGroups.size} word groups</p>
+            <p>Click the button below to download</p>
+        `;
+        content.appendChild(successDiv);
+
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "Download TXT File";
+        downloadButton.addEventListener("click", () => {
+          a.click();
+          URL.revokeObjectURL(url);
+
+          const doneMsg = document.createElement("p");
+          doneMsg.className = "correct";
+          doneMsg.textContent = "Export completed!";
+          content.appendChild(doneMsg);
+
+          downloadButton.disabled = true;
+          updateStatus("Export completed");
+        });
+
+        content.appendChild(downloadButton);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showExportTxt();
+        });
+
+        content.appendChild(backButton);
+        updateStatus("Ready to export all word groups");
+      }
+
+      function exportVocabStats() {
+        let exportContent = "";
+
+        for (const [word, status] of Object.entries(vocabStats)) {
+          exportContent += `${word}:${status}\n`;
+        }
+
+        // Create download link
+        const blob = new Blob([exportContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "vocabulary_stats.txt";
+
+        clearContent();
+
+        const successDiv = document.createElement("div");
+        successDiv.innerHTML = `
+            <p class="correct">Ready to export ${
+              Object.keys(vocabStats).length
+            } vocabulary stats</p>
+            <p>Click the button below to download</p>
+        `;
+        content.appendChild(successDiv);
+
+        const downloadButton = document.createElement("button");
+        downloadButton.textContent = "Download TXT File";
+        downloadButton.addEventListener("click", () => {
+          a.click();
+          URL.revokeObjectURL(url);
+
+          const doneMsg = document.createElement("p");
+          doneMsg.className = "correct";
+          doneMsg.textContent = "Export completed!";
+          content.appendChild(doneMsg);
+
+          downloadButton.disabled = true;
+          updateStatus("Export completed");
+        });
+
+        content.appendChild(downloadButton);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          showExportTxt();
+        });
+
+        content.appendChild(backButton);
+        updateStatus("Ready to export vocabulary stats");
+      }
+
+      function showRecycleBin() {
+        clearContent();
+
+        const title = document.createElement("h3");
+        title.textContent = "Recycle Bin";
+        content.appendChild(title);
+
+        if (recycleBin.length === 0) {
+          const emptyMsg = document.createElement("p");
+          emptyMsg.textContent = "Recycle bin is empty";
+          content.appendChild(emptyMsg);
+        } else {
+          // 1. 添加清空按钮（固定在顶部）
+          const clearAllBtn = document.createElement("button");
+          clearAllBtn.textContent = "🗑️ Empty Recycle Bin";
+          clearAllBtn.className = "cancel";
+          clearAllBtn.style.marginBottom = "20px";
+          clearAllBtn.onclick = () => {
+            showConfirm(
+              "Permanently delete ALL items in recycle bin?",
+              (confirmed) => {
+                if (confirmed) {
+                  recycleBin = [];
+                  saveData();
+                  clearContent();
+                  const successMsg = document.createElement("p");
+                  successMsg.className = "correct";
+                  successMsg.textContent = "Recycle bin emptied successfully";
+                  content.appendChild(successMsg);
+                  setTimeout(() => showRecycleBin(), 1500);
+                }
+              }
+            );
+          };
+          content.appendChild(clearAllBtn);
+
+          // 2. 显示所有回收站项目
+          recycleBin
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .forEach((item, index) => {
+              const binItem = document.createElement("div");
+              binItem.className = "recycle-bin-item";
+
+              let itemText;
+              if (item.word === "ALL_WORDS") {
+                itemText = `Cleared all words (${item.group.length} words)`;
+              } else if (item.group[0] === "STATUS_DELETION") {
+                itemText = `Removed "${item.word}" from ${item.source}`;
+              } else if (item.group.length > 1) {
+                itemText = `Deleted word group: ${item.group.join(", ")}`;
+              } else {
+                itemText = `Deleted word: "${item.word}"`;
+              }
+
+              binItem.innerHTML = `
+                <div>
+                    <div>${itemText}</div>
+                    <div class="recycle-bin-meta">
+                        ${new Date(item.timestamp).toLocaleString()} • ${
+                item.source
+              }
+                    </div>
+                </div>
+                <div class="recycle-bin-actions">
+                    <button class="restore-btn">↻ Restore</button>
+                    <button class="cancel">✕ Delete</button>
+                </div>
+            `;
+
+              // 恢复功能
+              binItem
+                .querySelector(".restore-btn")
+                .addEventListener("click", () => {
+                  restoreFromRecycleBin(index);
+                });
+
+              // 永久删除
+              binItem.querySelector(".cancel").addEventListener("click", () => {
+                showConfirm("Permanently delete this item?", (confirmed) => {
+                  if (confirmed) {
+                    recycleBin.splice(index, 1);
+                    saveData();
+                    showRecycleBin();
+                  }
+                });
+              });
+
+              content.appendChild(binItem);
+            });
+        }
+
+        // 返回按钮
+        const backButton = document.createElement("button");
+        backButton.textContent = "← Back";
+        backButton.className = "cancel";
+        backButton.style.marginTop = "20px";
+        backButton.addEventListener("click", () => {
+          handleMenuChoice(currentChoice);
+        });
+        content.appendChild(backButton);
+      }
+
+      function showAdminLogin() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Admin Login";
+        container.appendChild(title);
+
+        const usernameLabel = document.createElement("label");
+        usernameLabel.textContent = "Username:";
+        container.appendChild(usernameLabel);
+
+        const usernameInput = document.createElement("input");
+        usernameInput.type = "text";
+        usernameInput.placeholder = "Enter username...";
+        container.appendChild(usernameInput);
+
+        const passwordLabel = document.createElement("label");
+        passwordLabel.textContent = "Password:";
+        container.appendChild(passwordLabel);
+
+        const passwordInput = document.createElement("input");
+        passwordInput.type = "password";
+        passwordInput.placeholder = "Enter password...";
+        container.appendChild(passwordInput);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const loginButton = document.createElement("button");
+        loginButton.textContent = "Login";
+        loginButton.addEventListener("click", () => {
+          const username = usernameInput.value.trim();
+          const password = passwordInput.value.trim();
+
+          // 检查是否是管理员账号
+          if (
+            (username === ADMIN_PASSWORD.username &&
+              password === ADMIN_PASSWORD.password) ||
+            (usersData[username] &&
+              usersData[username].password === password &&
+              usersData[username].isAdmin === true)
+          ) {
+            isAdmin = true;
+            updateStatus("Admin logged in");
+            showBulletinBoard();
+          } else {
+            const errorMsg = document.createElement("p");
+            errorMsg.className = "incorrect";
+            errorMsg.textContent = "Invalid username or password";
+            container.appendChild(errorMsg);
+            updateStatus("Login failed");
+          }
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          showBulletinBoard();
+        });
+
+        buttonGroup.appendChild(loginButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        usernameInput.focus();
+      }
+
+      function showNewAnnouncement(editIndex = null) {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent =
+          editIndex === null ? "New Announcement" : "Edit Announcement";
+        container.appendChild(title);
+
+        const titleLabel = document.createElement("label");
+        titleLabel.textContent = "Title:";
+        container.appendChild(titleLabel);
+
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.placeholder = "Enter title...";
+        if (editIndex !== null) {
+          titleInput.value = bulletinBoard[editIndex].title;
+        }
+        container.appendChild(titleInput);
+
+        const contentLabel = document.createElement("label");
+        contentLabel.textContent = "Content:";
+        container.appendChild(contentLabel);
+
+        const contentInput = document.createElement("textarea");
+        contentInput.placeholder = "Enter content...";
+        if (editIndex !== null) {
+          contentInput.value = bulletinBoard[editIndex].content;
+        }
+        container.appendChild(contentInput);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const saveButton = document.createElement("button");
+        saveButton.textContent =
+          editIndex === null ? "Publish" : "Save Changes";
+        saveButton.addEventListener("click", () => {
+          const title = titleInput.value.trim();
+          const content = contentInput.value.trim();
+
+          if (!title || !content) {
+            const errorMsg = document.createElement("p");
+            errorMsg.className = "incorrect";
+            errorMsg.textContent = "Title and content are required";
+            container.appendChild(errorMsg);
+            return;
+          }
+
+          if (editIndex === null) {
+            // New announcement
+            bulletinBoard.push({
+              title: title,
+              content: content,
+              author: ADMIN_PASSWORD.username,
+              timestamp: new Date().toISOString(),
+            });
+          } else {
+            // Edit existing announcement
+            bulletinBoard[editIndex] = {
+              title: title,
+              content: content,
+              author: bulletinBoard[editIndex].author, // Keep original author
+              timestamp: bulletinBoard[editIndex].timestamp, // Keep original timestamp
+            };
+          }
+
+          saveData();
+          showBulletinBoard();
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          showBulletinBoard();
+        });
+
+        buttonGroup.appendChild(saveButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        titleInput.focus();
+      }
+
+      function showBackgroundCustomizer() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Customize Background";
+        container.appendChild(title);
+
+        // 图标自定义部分
+        const iconTitle = document.createElement("h4");
+        iconTitle.textContent = "Custom Icon:";
+        container.appendChild(iconTitle);
+
+        const iconFileInput = document.createElement("input");
+        iconFileInput.type = "file";
+        iconFileInput.id = "iconFileUpload";
+        iconFileInput.accept = "image/*";
+        iconFileInput.style.display = "none"; // 隐藏实际的文件输入
+
+        // 将文件输入添加到容器中
+        container.appendChild(iconFileInput);
+
+        const iconFileLabel = document.createElement("label");
+        iconFileLabel.htmlFor = "iconFileUpload";
+        iconFileLabel.className = "custom-bg-label";
+        iconFileLabel.textContent = "Upload Custom Icon";
+        container.appendChild(iconFileLabel);
+
+        iconFileInput.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (!file.type.match("image.*")) {
+            updateStatus("Please select an image file");
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const iconUrl = e.target.result;
+            const link = document.querySelector("link[rel~='icon']");
+            if (link) {
+              link.href = iconUrl;
+            } else {
+              const newLink = document.createElement("link");
+              newLink.rel = "icon";
+              newLink.href = iconUrl;
+              document.head.appendChild(newLink);
+            }
+            localStorage.setItem("vocab_custom_icon", iconUrl);
+            updateStatus("Custom icon set");
+          };
+          reader.readAsDataURL(file);
+        });
+
+        const resetIconButton = document.createElement("button");
+        resetIconButton.textContent = "Reset to Default Icon";
+        resetIconButton.className = "cancel";
+        resetIconButton.style.marginBottom = "20px";
+        resetIconButton.addEventListener("click", () => {
+          const link = document.querySelector("link[rel~='icon']");
+          if (link) {
+            document.head.removeChild(link);
+          }
+          localStorage.removeItem("vocab_custom_icon");
+          updateStatus("Icon reset to default");
+        });
+        container.appendChild(resetIconButton);
+
+        // 新增：透明度调节部分
+        const opacityTitle = document.createElement("h4");
+        opacityTitle.textContent = "Background Opacity:";
+        container.appendChild(opacityTitle);
+
+        const opacitySlider = document.createElement("input");
+        opacitySlider.type = "range";
+        opacitySlider.min = "10";
+        opacitySlider.max = "100";
+        opacitySlider.value = localStorage.getItem("vocab_bg_opacity") || "100";
+        opacitySlider.id = "bgOpacitySlider";
+        opacitySlider.style.width = "100%";
+        opacitySlider.style.margin = "10px 0";
+        container.appendChild(opacitySlider);
+
+        const opacityValue = document.createElement("div");
+        opacityValue.textContent = `Opacity: ${opacitySlider.value}%`;
+        container.appendChild(opacityValue);
+
+        opacitySlider.addEventListener("input", function () {
+          opacityValue.textContent = `Opacity: ${this.value}%`;
+          document.body.style.opacity = `${this.value / 100}`;
+          localStorage.setItem("vocab_bg_opacity", this.value);
+        });
+
+        // 原有的背景预设和自定义背景代码保持不变...
+        const presetsTitle = document.createElement("h4");
+        presetsTitle.textContent = "Preset Backgrounds:";
+        container.appendChild(presetsTitle);
+
+        const presetsDiv = document.createElement("div");
+        presetsDiv.className = "background-options";
+
+        const presetColors = [
+          { name: "Dark", color: "#1a1a1a" },
+          { name: "Darker", color: "#0a0a0a" },
+          { name: "Blue", color: "#0d1b2a" },
+          { name: "Navy", color: "#1b263b" },
+          { name: "Purple", color: "#231942" },
+          { name: "Green", color: "#1b4332" },
+        ];
+
+        presetColors.forEach((preset) => {
+          const option = document.createElement("div");
+          option.className = "background-option";
+          option.style.backgroundColor = preset.color;
+          option.title = preset.name;
+          option.dataset.color = preset.color;
+          option.addEventListener("click", () => {
+            document.body.style.background = preset.color;
+            localStorage.setItem("vocab_bg_color", preset.color);
+            updateStatus(`Background set to ${preset.name}`);
+          });
+          presetsDiv.appendChild(option);
+        });
+
+        container.appendChild(presetsDiv);
+
+        const customTitle = document.createElement("h4");
+        customTitle.textContent = "Custom Background:";
+        container.appendChild(customTitle);
+
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.id = "customBgUpload";
+        fileInput.accept = "image/*";
+
+        const fileLabel = document.createElement("label");
+        fileLabel.htmlFor = "customBgUpload";
+        fileLabel.className = "custom-bg-label";
+        fileLabel.textContent = "Upload Image";
+        container.appendChild(fileLabel);
+
+        fileInput.addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (!file.type.match("image.*")) {
+            updateStatus("Please select an image file");
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const imgUrl = e.target.result;
+            document.body.style.backgroundImage = `url(${imgUrl})`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundAttachment = "fixed";
+            localStorage.setItem("vocab_bg_image", imgUrl);
+            updateStatus("Custom background image set");
+          };
+          reader.readAsDataURL(file);
+        });
+
+        container.appendChild(fileInput);
+
+        const resetButton = document.createElement("button");
+        resetButton.textContent = "Reset to Default";
+        resetButton.className = "cancel";
+        resetButton.addEventListener("click", () => {
+          document.body.style.background = "#1a1a1a";
+          document.body.style.backgroundImage = "";
+          document.body.style.opacity = "1";
+          localStorage.removeItem("vocab_bg_color");
+          localStorage.removeItem("vocab_bg_image");
+          localStorage.removeItem("vocab_bg_opacity");
+          updateStatus("Background reset to default");
+        });
+
+        container.appendChild(resetButton);
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Returned to main menu");
+        });
+
+        container.appendChild(backButton);
+        content.appendChild(container);
+
+        // 加载保存的设置
+        const savedColor = localStorage.getItem("vocab_bg_color");
+        const savedImage = localStorage.getItem("vocab_bg_image");
+        const savedOpacity = localStorage.getItem("vocab_bg_opacity");
+        const savedIcon = localStorage.getItem("vocab_custom_icon");
+
+        if (savedColor) {
+          document.body.style.background = savedColor;
+        } else if (savedImage) {
+          document.body.style.backgroundImage = `url(${savedImage})`;
+          document.body.style.backgroundSize = "cover";
+          document.body.style.backgroundAttachment = "fixed";
+        }
+
+        if (savedOpacity) {
+          document.body.style.opacity = `${savedOpacity / 100}`;
+          opacitySlider.value = savedOpacity;
+          opacityValue.textContent = `Opacity: ${savedOpacity}%`;
+        }
+
+        if (savedIcon) {
+          const link =
+            document.querySelector("link[rel~='icon']") ||
+            document.createElement("link");
+          link.rel = "icon";
+          link.href = savedIcon;
+          document.head.appendChild(link);
+        }
+      }
+
+      // Modified bulletin board item creation in showBulletinBoard()
+      function showBulletinBoard() {
+        clearContent();
+
+        const title = document.createElement("h3");
+        title.textContent = "Bulletin Board";
+        content.appendChild(title);
+
+        if (bulletinBoard.length === 0) {
+          const emptyMsg = document.createElement("p");
+          emptyMsg.textContent = "No announcements yet.";
+          content.appendChild(emptyMsg);
+        } else {
+          const boardDiv = document.createElement("div");
+          boardDiv.className = "bulletin-board";
+
+          // Sort by timestamp (newest first)
+          bulletinBoard.sort(
+            (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+          );
+
+          bulletinBoard.forEach((item, index) => {
+            const bulletinItem = document.createElement("div");
+            bulletinItem.className = "bulletin-item";
+
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "bulletin-title";
+            titleDiv.textContent = item.title;
+            titleDiv.style.cursor = "pointer";
+
+            const contentDiv = document.createElement("div");
+            contentDiv.className = "bulletin-content";
+            contentDiv.textContent = item.content;
+
+            const metaDiv = document.createElement("div");
+            metaDiv.className = "bulletin-meta";
+            metaDiv.textContent = `Posted by ${item.author} on ${new Date(
+              item.timestamp
+            ).toLocaleString()}`;
+
+            // Toggle content visibility when clicking title
+            titleDiv.addEventListener("click", () => {
+              if (contentDiv.style.display === "none") {
+                contentDiv.style.display = "block";
+                metaDiv.style.display = "block";
+                titleDiv.classList.remove("collapsed");
+                if (isAdmin && bulletinItem.querySelector(".admin-controls")) {
+                  bulletinItem.querySelector(".admin-controls").style.display =
+                    "flex";
+                }
+              } else {
+                contentDiv.style.display = "none";
+                metaDiv.style.display = "none";
+                titleDiv.classList.add("collapsed");
+                if (isAdmin && bulletinItem.querySelector(".admin-controls")) {
+                  bulletinItem.querySelector(".admin-controls").style.display =
+                    "none";
+                }
+              }
+            });
+
+            bulletinItem.appendChild(titleDiv);
+            bulletinItem.appendChild(contentDiv);
+            bulletinItem.appendChild(metaDiv);
+
+            if (isAdmin) {
+              const adminControls = document.createElement("div");
+              adminControls.className = "admin-controls";
+
+              const editButton = document.createElement("button");
+              editButton.textContent = "Edit";
+              editButton.addEventListener("click", (e) => {
+                e.stopPropagation();
+                showNewAnnouncement(index);
+              });
+
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.className = "cancel";
+              deleteButton.addEventListener("click", (e) => {
+                e.stopPropagation();
+                showConfirm("Delete this announcement?", (confirmed) => {
+                  if (confirmed) {
+                    bulletinBoard.splice(index, 1);
+                    saveData();
+                    showBulletinBoard();
+                  }
+                });
+              });
+
+              adminControls.appendChild(editButton);
+              adminControls.appendChild(deleteButton);
+              bulletinItem.appendChild(adminControls);
+            }
+
+            boardDiv.appendChild(bulletinItem);
+          });
+
+          content.appendChild(boardDiv);
+        }
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        if (isAdmin) {
+          const newButton = document.createElement("button");
+          newButton.textContent = "New Announcement";
+          newButton.addEventListener("click", () => {
+            showNewAnnouncement();
+          });
+          buttonGroup.appendChild(newButton);
+
+          const logoutButton = document.createElement("button");
+          logoutButton.textContent = "Logout";
+          logoutButton.className = "cancel";
+          logoutButton.addEventListener("click", () => {
+            isAdmin = false;
+            showBulletinBoard();
+            updateStatus("Admin logged out");
+          });
+          buttonGroup.appendChild(logoutButton);
+        } else {
+          const adminButton = document.createElement("button");
+          adminButton.textContent = "Admin Login";
+          adminButton.addEventListener("click", () => {
+            showAdminLogin();
+          });
+          buttonGroup.appendChild(adminButton);
+        }
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Returned to main menu");
+        });
+
+        buttonGroup.appendChild(backButton);
+        content.appendChild(buttonGroup);
+        updateStatus(`Bulletin board (${bulletinBoard.length} announcements)`);
+      }
+
+      function showTextAnalyzer() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Text Analyzer";
+        container.appendChild(title);
+
+        const instructions = document.createElement("p");
+        instructions.textContent =
+          "Paste text to analyze for vocabulary words (will ignore case and punctuation):";
+        container.appendChild(instructions);
+
+        const textarea = document.createElement("textarea");
+        textarea.placeholder = "Paste your text here...";
+        container.appendChild(textarea);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const analyzeButton = document.createElement("button");
+        analyzeButton.textContent = "Analyze";
+        analyzeButton.addEventListener("click", () => {
+          const text = textarea.value.trim();
+          if (text) {
+            analyzeText(text);
+          }
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Analysis canceled");
+        });
+
+        buttonGroup.appendChild(analyzeButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        textarea.focus();
+      }
+
+      function analyzeText(text) {
+        // Normalize text - lowercase and remove punctuation except apostrophes and hyphens
+        const normalizedText = text
+          .toLowerCase()
+          .replace(/[0-9.,\/#!$%\^&\*;:{}=\_`~()?"]/g, "") // Remove numbers and punctuation except apostrophes and hyphens
+          .replace(/\s+/g, " "); // Normalize whitespace
+
+        const words = normalizedText.split(/\s+/).filter((w) => w);
+
+        const knownWords = new Set();
+        const unsureWords = new Set();
+        const unknownWords = new Set();
+        const newWords = new Set();
+
+        // Create progress bar
+        const progressContainer = document.createElement("div");
+        progressContainer.className = "analyze-progress";
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        progressContainer.appendChild(progressBar);
+        content.appendChild(progressContainer);
+
+        // Analyze words with progress feedback
+        let analyzedCount = 0;
+        const totalWords = words.length;
+
+        const analyzeInterval = setInterval(() => {
+          if (analyzedCount >= totalWords) {
+            clearInterval(analyzeInterval);
+            showAnalysisResults(
+              knownWords,
+              unsureWords,
+              unknownWords,
+              newWords
+            );
+            return;
+          }
+
+          const word = words[analyzedCount];
+
+          // Check word status
+          if (vocabStats[word]) {
+            if (vocabStats[word] === "known") {
+              knownWords.add(word);
+            } else if (vocabStats[word] === "unsure") {
+              unsureWords.add(word);
+            } else if (vocabStats[word] === "unknown") {
+              unknownWords.add(word);
+            }
+          } else {
+            newWords.add(word);
+          }
+
+          analyzedCount++;
+          progressBar.style.width = `${(analyzedCount / totalWords) * 100}%`;
+        }, 10);
+      }
+
+      function showAnalysisResults(
+        knownWords,
+        unsureWords,
+        unknownWords,
+        newWords
+      ) {
+        clearContent();
+
+        const title = document.createElement("h3");
+        title.textContent = "Text Analysis Results";
+        content.appendChild(title);
+
+        const statsDiv = document.createElement("div");
+        statsDiv.className = "word-stats";
+
+        const totalRecognized =
+          knownWords.size +
+          unsureWords.size +
+          unknownWords.size +
+          newWords.size;
+        const totalRecorded =
+          knownWords.size + unsureWords.size + unknownWords.size;
+
+        statsDiv.innerHTML = `
+        <p>Total words recognized: ${totalRecognized}</p>
+        <p>Recorded words: ${totalRecorded} (${knownWords.size} known, ${
+          unsureWords.size + unknownWords.size
+        } unknown)</p>
+        <p>${newWords.size} new words to process</p>
+    `;
+        content.appendChild(statsDiv);
+
+        if (newWords.size > 0) {
+          const newTitle = document.createElement("h4");
+          newTitle.textContent = "New words:";
+          content.appendChild(newTitle);
+
+          const wordList = document.createElement("div");
+          wordList.className = "word-list";
+
+          Array.from(newWords).forEach((word) => {
+            const wordItem = document.createElement("div");
+            wordItem.className = "vocab-word";
+
+            const wordText = document.createElement("span");
+            wordText.textContent = word;
+
+            const statusControls = document.createElement("div");
+            statusControls.className = "word-status";
+
+            const knownBtn = document.createElement("button");
+            knownBtn.textContent = "Known";
+            knownBtn.className = "status-btn status-known";
+            knownBtn.addEventListener("click", () => {
+              updateWordStatus(word, "known");
+              wordItem.remove();
+              statsDiv.innerHTML = `
+                    <p>Total words recognized: ${totalRecognized}</p>
+                    <p>Recorded words: ${totalRecorded + 1} (${
+                knownWords.size + 1
+              } known, ${unsureWords.size + unknownWords.size} unknown)</p>
+                    <p>${newWords.size - 1} new words to process</p>
+                `;
+            });
+
+            const unsureBtn = document.createElement("button");
+            unsureBtn.textContent = "Unsure";
+            unsureBtn.className = "status-btn status-unsure";
+            unsureBtn.addEventListener("click", () => {
+              updateWordStatus(word, "unsure");
+              wordItem.remove();
+              statsDiv.innerHTML = `
+                    <p>Total words recognized: ${totalRecognized}</p>
+                    <p>Recorded words: ${totalRecorded + 1} (${
+                knownWords.size
+              } known, ${unsureWords.size + unknownWords.size + 1} unknown)</p>
+                    <p>${newWords.size - 1} new words to process</p>
+                `;
+            });
+
+            const unknownBtn = document.createElement("button");
+            unknownBtn.textContent = "Unknown";
+            unknownBtn.className = "status-btn status-unknown";
+            unknownBtn.addEventListener("click", () => {
+              updateWordStatus(word, "unknown");
+              wordItem.remove();
+              statsDiv.innerHTML = `
+                    <p>Total words recognized: ${totalRecognized}</p>
+                    <p>Recorded words: ${totalRecorded + 1} (${
+                knownWords.size
+              } known, ${unsureWords.size + unknownWords.size + 1} unknown)</p>
+                    <p>${newWords.size - 1} new words to process</p>
+                `;
+            });
+
+            statusControls.appendChild(knownBtn);
+            statusControls.appendChild(unsureBtn);
+            statusControls.appendChild(unknownBtn);
+
+            wordItem.appendChild(wordText);
+            wordItem.appendChild(statusControls);
+            wordList.appendChild(wordItem);
+          });
+
+          content.appendChild(wordList);
+        }
+
+        if (
+          knownWords.size > 0 ||
+          unsureWords.size > 0 ||
+          unknownWords.size > 0
+        ) {
+          const recordedTitle = document.createElement("h4");
+          recordedTitle.textContent = "Recorded words:";
+          content.appendChild(recordedTitle);
+
+          const recordedDiv = document.createElement("div");
+
+          if (knownWords.size > 0) {
+            const knownTitle = document.createElement("h5");
+            knownTitle.className = "correct";
+            knownTitle.textContent = `Known (${knownWords.size}):`;
+            recordedDiv.appendChild(knownTitle);
+
+            const knownGroup = document.createElement("div");
+            knownGroup.className = "word-group";
+            Array.from(knownWords).forEach((word) => {
+              const wordSpan = document.createElement("span");
+              wordSpan.className = "word-item correct";
+              wordSpan.textContent = word;
+              knownGroup.appendChild(wordSpan);
+            });
+            recordedDiv.appendChild(knownGroup);
+          }
+
+          if (unsureWords.size > 0) {
+            const unsureTitle = document.createElement("h5");
+            unsureTitle.className = "status-unsure";
+            unsureTitle.textContent = `Unsure (${unsureWords.size}):`;
+            recordedDiv.appendChild(unsureTitle);
+
+            const unsureGroup = document.createElement("div");
+            unsureGroup.className = "word-group";
+            Array.from(unsureWords).forEach((word) => {
+              const wordSpan = document.createElement("span");
+              wordSpan.className = "word-item status-unsure";
+              wordSpan.textContent = word;
+              unsureGroup.appendChild(wordSpan);
+            });
+            recordedDiv.appendChild(unsureGroup);
+          }
+
+          if (unknownWords.size > 0) {
+            const unknownTitle = document.createElement("h5");
+            unknownTitle.className = "incorrect";
+            unknownTitle.textContent = `Unknown (${unknownWords.size}):`;
+            recordedDiv.appendChild(unknownTitle);
+
+            const unknownGroup = document.createElement("div");
+            unknownGroup.className = "word-group";
+            Array.from(unknownWords).forEach((word) => {
+              const wordSpan = document.createElement("span");
+              wordSpan.className = "word-item incorrect";
+              wordSpan.textContent = word;
+              unknownGroup.appendChild(wordSpan);
+            });
+            recordedDiv.appendChild(unknownGroup);
+          }
+
+          content.appendChild(recordedDiv);
+        }
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "Back";
+        backButton.className = "cancel";
+        backButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Returned to main menu");
+        });
+
+        content.appendChild(backButton);
+        updateStatus("Analysis completed");
+      }
+
+      function updateWordStatus(word, status) {
+        const prevStatus = vocabStats[word];
+        vocabStats[word] = status;
+
+        if (saveData()) {
+          // Show feedback message
+          const feedback = document.createElement("div");
+          feedback.className = "status-bar";
+          feedback.innerHTML = `
+            <p class="correct">✓ "${word}" status changed from 
+            ${prevStatus || "unmarked"} to ${status}</p>
+        `;
+
+          // Insert at top of content
+          if (content.firstChild) {
+            content.insertBefore(feedback, content.firstChild);
+          } else {
+            content.appendChild(feedback);
+          }
+
+          // Scroll to top to show feedback
+          content.scrollTop = 0;
+
+          // Remove feedback after 3 seconds
+          setTimeout(() => {
+            feedback.remove();
+          }, 3000);
+        }
+      }
+
+      function showReviewSetup() {
+        clearContent();
+
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = "Vocabulary Review";
+        container.appendChild(title);
+
+        // Show review stats
+        const stats = calculateReviewStats();
+        const statsDiv = document.createElement("div");
+        statsDiv.className = "word-stats";
+
+        // Get daily goal from user preferences or use default
+        const dailyGoal =
+          usersData[currentUser.username]?.dailyReviewGoal || 20;
+
+        statsDiv.innerHTML = `
+        <p>Words to review: ${stats.totalUnknown + stats.totalUnsure}</p>
+        <p>Unknown words: ${stats.totalUnknown}</p>
+        <p>Unsure words: ${stats.totalUnsure}</p>
+        <p>Words reviewed today: ${stats.reviewedToday}</p>
+        <p>Daily goal: ${dailyGoal} words</p>
+    `;
+        container.appendChild(statsDiv);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const startButton = document.createElement("button");
+        startButton.textContent = "Start Review";
+        startButton.addEventListener("click", () => {
+          startReviewSession(dailyGoal);
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Cancel";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          clearContent();
+          updateStatus("Review canceled");
+        });
+
+        buttonGroup.appendChild(startButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        content.appendChild(container);
+        updateStatus("Ready for vocabulary review");
+      }
+
+      function calculateReviewStats() {
+        const today = new Date().toISOString().split("T")[0];
+        let reviewedToday = 0;
+        let totalUnknown = 0;
+        let totalUnsure = 0;
+
+        // Get words from vocabStats
+        for (const [word, status] of Object.entries(vocabStats)) {
+          if (status === "unknown") totalUnknown++;
+          if (status === "unsure") totalUnsure++;
+
+          // Check if word was reviewed today
+          const wordData = localStorage.getItem(`word_review_${word}`);
+          if (wordData) {
+            const { lastReviewed } = JSON.parse(wordData);
+            if (lastReviewed && lastReviewed.startsWith(today)) {
+              reviewedToday++;
+            }
+          }
+        }
+
+        return {
+          reviewedToday,
+          totalUnknown,
+          totalUnsure,
+        };
+      }
+
+      function startReviewSession(dailyGoal) {
+        clearContent();
+
+        // Get words to review (unknown and unsure)
+        const unknownWords = [];
+        const unsureWords = [];
+
+        for (const [word, status] of Object.entries(vocabStats)) {
+          if (status === "unknown") unknownWords.push(word);
+          if (status === "unsure") unsureWords.push(word);
+        }
+
+        if (unknownWords.length === 0 && unsureWords.length === 0) {
+          const noWordsMsg = document.createElement("p");
+          noWordsMsg.className = "incorrect";
+          noWordsMsg.textContent =
+            "No words to review (mark words as unknown/unsure first)";
+          content.appendChild(noWordsMsg);
+          return;
+        }
+
+        // Calculate how many words to review from each category (3:2 ratio)
+        const totalWords = Math.min(
+          dailyGoal,
+          unknownWords.length + unsureWords.length
+        );
+        const unknownCount = Math.min(
+          Math.ceil(totalWords * 0.6),
+          unknownWords.length
+        );
+        const unsureCount = Math.min(
+          totalWords - unknownCount,
+          unsureWords.length
+        );
+
+        // Select random words for review
+        const selectedWords = [];
+
+        // Shuffle arrays
+        shuffleArray(unknownWords);
+        shuffleArray(unsureWords);
+
+        // Add unknown words
+        for (let i = 0; i < unknownCount; i++) {
+          selectedWords.push({
+            word: unknownWords[i],
+            originalStatus: "unknown",
+          });
+        }
+
+        // Add unsure words
+        for (let i = 0; i < unsureCount; i++) {
+          selectedWords.push({
+            word: unsureWords[i],
+            originalStatus: "unsure",
+          });
+        }
+
+        // Shuffle the final selection
+        shuffleArray(selectedWords);
+
+        // Start review
+        reviewNextWord(selectedWords, 0, totalWords);
+      }
+
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
+      }
+
+      function reviewNextWord(words, index, dailyGoal) {
+        if (index >= words.length) {
+          // Review completed
+          clearContent();
+          const completeMsg = document.createElement("p");
+          completeMsg.className = "correct";
+          completeMsg.textContent = `Review completed! You reviewed ${index} words today.`;
+          content.appendChild(completeMsg);
+
+          const backButton = document.createElement("button");
+          backButton.textContent = "Back to Menu";
+          backButton.addEventListener("click", () => {
+            clearContent();
+            updateStatus("Review completed");
+          });
+          content.appendChild(backButton);
+          return;
+        }
+
+        const currentWord = words[index];
+        clearContent();
+
+        const progress = document.createElement("p");
+        progress.textContent = `Review progress: ${index}/${dailyGoal}`;
+        content.appendChild(progress);
+
+        const wordDisplay = document.createElement("h3");
+        wordDisplay.textContent = currentWord.word;
+        content.appendChild(wordDisplay);
+
+        const statusInfo = document.createElement("p");
+        statusInfo.textContent = `Current status: ${currentWord.originalStatus}`;
+        content.appendChild(statusInfo);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        // Mark as known button
+        const knownButton = document.createElement("button");
+        knownButton.textContent = "Mark as Known";
+        knownButton.className = "status-known";
+        knownButton.addEventListener("click", () => {
+          updateWordReviewStatus(currentWord.word, "known");
+          reviewNextWord(words, index + 1, dailyGoal);
+        });
+
+        // Keep status button
+        const keepButton = document.createElement("button");
+        keepButton.textContent = "Keep Status";
+        keepButton.addEventListener("click", () => {
+          updateWordReviewStatus(currentWord.word, currentWord.originalStatus);
+          reviewNextWord(words, index + 1, dailyGoal);
+        });
+
+        // Skip button
+        const skipButton = document.createElement("button");
+        skipButton.textContent = "Skip";
+        skipButton.className = "cancel";
+        skipButton.addEventListener("click", () => {
+          reviewNextWord(words, index + 1, dailyGoal);
+        });
+
+        buttonGroup.appendChild(knownButton);
+        buttonGroup.appendChild(keepButton);
+        buttonGroup.appendChild(skipButton);
+        content.appendChild(buttonGroup);
+
+        // Record review time
+        const reviewData = {
+          lastReviewed: new Date().toISOString(),
+          timesReviewed: (() => {
+            const existingData = localStorage.getItem(
+              `word_review_${currentWord.word}`
+            );
+            return existingData
+              ? JSON.parse(existingData).timesReviewed + 1
+              : 1;
+          })(),
+        };
+        localStorage.setItem(
+          `word_review_${currentWord.word}`,
+          JSON.stringify(reviewData)
+        );
+      }
+
+      function updateWordReviewStatus(word, newStatus) {
+        if (newStatus !== vocabStats[word]) {
+          vocabStats[word] = newStatus;
+          saveData();
+
+          // Show brief feedback
+          const feedback = document.createElement("p");
+          feedback.className = "correct";
+          feedback.textContent = `"${word}" marked as ${newStatus}`;
+          content.insertBefore(feedback, content.firstChild);
+
+          // Remove feedback after 2 seconds
+          setTimeout(() => {
+            feedback.remove();
+          }, 2000);
+        }
+      }
+
+      function clearAllData() {
+        showConfirm(
+          "This will delete ALL data (words, groups, stats, reviews). Are you sure?",
+          (confirmed) => {
+            if (confirmed) {
+              // Backup data to localStorage before clearing
+              const backup = {
+                vocabulary: localStorage.getItem(DATA_KEY),
+                recycleBin: localStorage.getItem(RECYCLE_BIN_KEY),
+                bulletin: localStorage.getItem(BULLETIN_BOARD_KEY),
+                stats: localStorage.getItem(VOCAB_STATS_KEY),
+              };
+              localStorage.setItem("vocab_backup", JSON.stringify(backup));
+
+              // Clear all data
+              localStorage.removeItem(DATA_KEY);
+              localStorage.removeItem(RECYCLE_BIN_KEY);
+              localStorage.removeItem(BULLETIN_BOARD_KEY);
+              localStorage.removeItem(VOCAB_STATS_KEY);
+
+              // Clear review data
+              Object.keys(localStorage).forEach((key) => {
+                if (key.startsWith("word_review_")) {
+                  localStorage.removeItem(key);
+                }
+              });
+
+              // Reset in-memory data
+              mp.clear();
+              cnt = 0;
+              for (let i = 0; i < N; i++) {
+                fa[i] = i;
+                bac[i] = "";
+              }
+              recycleBin = [];
+              bulletinBoard = [];
+              vocabStats = {};
+
+              clearContent();
+              const successMsg = document.createElement("p");
+              successMsg.className = "correct";
+              successMsg.textContent =
+                "All data cleared. Backup saved in localStorage (vocab_backup).";
+              content.appendChild(successMsg);
+
+              updateStatus("All data cleared");
+            }
+          }
+        );
+      }
+
+      function showWordList(statusType) {
+        clearContent();
+
+        const title = document.createElement("h3");
+        title.textContent = `${
+          statusType.charAt(0).toUpperCase() + statusType.slice(1)
+        } Words`;
+        content.appendChild(title);
+
+        const filteredWords = Object.entries(vocabStats)
+          .filter(([word, status]) => status === statusType)
+          .map(([word]) => word);
+
+        if (filteredWords.length === 0) {
+          const emptyMsg = document.createElement("p");
+          emptyMsg.textContent = `No ${statusType} words found.`;
+          content.appendChild(emptyMsg);
+        } else {
+          const wordList = document.createElement("div");
+          wordList.className = "word-list";
+
+          filteredWords.forEach((word) => {
+            const wordItem = document.createElement("div");
+            wordItem.className = "vocab-word";
+
+            wordItem.innerHTML = `
+                <span>${word}</span>
+                <div class="word-status">
+                    ${["known", "unsure", "unknown"]
+                      .filter((s) => s !== statusType)
+                      .map(
+                        (s) => `
+                            <button class="status-btn status-${s}" 
+                                    onclick="updateWordStatusAndRefresh('${word}', '${s}', '${statusType}')">
+                                ${s.charAt(0).toUpperCase() + s.slice(1)}
+                            </button>
+                        `
+                      )
+                      .join("")}
+                    <button class="cancel delete-btn">Delete</button>
+                </div>
+            `;
+
+            wordItem
+              .querySelector(".delete-btn")
+              .addEventListener("click", (e) => {
+                e.stopPropagation();
+
+                showConfirm(
+                  `Remove "${word}" from ${statusType} words?`,
+                  (confirmed) => {
+                    if (confirmed) {
+                      recycleBin.push({
+                        word: word,
+                        group: ["STATUS_DELETION"],
+                        timestamp: new Date().toISOString(),
+                        source: `Removed from ${statusType} words`,
+                      });
+
+                      delete vocabStats[word];
+                      saveData();
+
+                      clearContent();
+                      const result = document.createElement("div");
+                      result.className = "deletion-result";
+                      result.innerHTML = `
+                            <p class="correct">✓ "${word}" removed from ${statusType} words</p>
+                            <div class="button-group">
+                                <button onclick="showWordList('${statusType}')">
+                                    Back to List
+                                </button>
+                                <button onclick="handleMenuChoice('${currentChoice}')">
+                                    Back to Menu
+                                </button>
+                            </div>
+                        `;
+                      content.appendChild(result);
+                    }
+                  }
+                );
+              });
+
+            wordList.appendChild(wordItem);
+          });
+
+          content.appendChild(wordList);
+
+          const clearAllBtn = document.createElement("button");
+          clearAllBtn.textContent = `🧹 Clear All ${statusType} Words`;
+          clearAllBtn.className = "cancel";
+          clearAllBtn.style.marginTop = "20px";
+          clearAllBtn.addEventListener("click", () => {
+            showConfirm(
+              `Clear ALL ${statusType} words? This cannot be undone!`,
+              (confirmed) => {
+                if (confirmed) {
+                  const deletedWords = Object.keys(vocabStats).filter(
+                    (w) => vocabStats[w] === statusType
+                  );
+
+                  if (deletedWords.length > 0) {
+                    recycleBin.push({
+                      word: "BATCH_DELETE",
+                      group: deletedWords,
+                      timestamp: new Date().toISOString(),
+                      source: `Cleared all ${statusType} words`,
+                    });
+                  }
+
+                  deletedWords.forEach((w) => delete vocabStats[w]);
+                  saveData();
+
+                  clearContent();
+                  const result = document.createElement("div");
+                  result.className = "deletion-result";
+                  result.innerHTML = `
+                        <p class="correct">✓ Cleared all ${statusType} words</p>
+                        <p>Removed ${deletedWords.length} words from vocabulary status.</p>
+                        <div class="button-group">
+                            <button onclick="handleMenuChoice('${currentChoice}')">
+                                Back to Menu
+                            </button>
+                        </div>
+                    `;
+                  content.appendChild(result);
+                }
+              }
+            );
+          });
+
+          content.appendChild(clearAllBtn);
+        }
+
+        const backButton = document.createElement("button");
+        backButton.textContent = "← Back to Main Menu";
+        backButton.className = "cancel";
+        backButton.style.marginTop = "20px";
+        backButton.addEventListener("click", () => {
+          handleMenuChoice(currentChoice);
+        });
+        content.appendChild(backButton);
+      }
+
+      // New helper function for status changes
+      function getWordStatusCounts() {
+        let known = 0,
+          unknown = 0,
+          unsure = 0;
+        for (const word in vocabStats) {
+          if (vocabStats[word] === "known") known++;
+          else if (vocabStats[word] === "unknown") unknown++;
+          else if (vocabStats[word] === "unsure") unsure++;
+        }
+        return { known, unknown, unsure };
+      }
+
+      function updateWordStatusAndRefresh(word, newStatus, currentStatusType) {
+        updateWordStatus(word, newStatus);
+        setTimeout(() => {
+          showWordList(currentStatusType);
+        }, 1000);
+      }
+
+      function restoreFromRecycleBin(index) {
+        const item = recycleBin[index];
+
+        if (item.word === "ALL_WORDS") {
+          // Restore all words (special case for clear all)
+          for (const word of item.group) {
+            if (!mp.has(word)) {
+              mp.set(word, ++cnt);
+              bac[cnt] = word;
+            }
+          }
+        } else if (item.group && item.group[0] === "STATUS_DELETION") {
+          // Restore vocabulary status with original status
+          const statusMatch = item.source.match(
+            /Removed from (known|unknown|unsure) words/
+          );
+          if (statusMatch && statusMatch[1]) {
+            vocabStats[item.word] = statusMatch[1];
+          }
+        } else if (item.source.includes("Cleared all")) {
+          // Restore vocabulary status from batch delete
+          const statusMatch = item.source.match(
+            /Cleared all (known|unknown|unsure) words/
+          );
+          if (statusMatch && statusMatch[1]) {
+            const status = statusMatch[1];
+            for (const word of item.group) {
+              vocabStats[word] = status;
+            }
+          }
+        } else {
+          // Restore word or word group
+          for (const word of item.group) {
+            if (!mp.has(word)) {
+              mp.set(word, ++cnt);
+              bac[cnt] = word;
+            }
+
+            // Reconnect the words in the group
+            if (item.group.length > 1) {
+              const rootWord = item.word;
+              if (mp.has(rootWord)) {
+                union_set(mp.get(rootWord), mp.get(word));
+              }
+            }
+          }
+        }
+
+        // Remove from recycle bin
+        recycleBin.splice(index, 1);
+
+        if (saveData()) {
+          showRecycleBin();
+          const successMsg = document.createElement("p");
+          successMsg.className = "correct";
+          successMsg.textContent =
+            item.word === "ALL_WORDS"
+              ? "All words restored successfully!"
+              : "Item restored successfully!";
+          content.insertBefore(successMsg, content.firstChild);
+          updateStatus("Restore completed");
+        } else {
+          const errorMsg = document.createElement("p");
+          errorMsg.className = "incorrect";
+          errorMsg.textContent = "Error during restore";
+          content.insertBefore(errorMsg, content.firstChild);
+          updateStatus("Restore failed");
+        }
+      }
+
+      function showConfirm(message, callback) {
+        clearContent();
+
+        const confirmDiv = document.createElement("div");
+        confirmDiv.className = "confirm-prompt";
+
+        const messageP = document.createElement("p");
+        messageP.textContent = message;
+        confirmDiv.appendChild(messageP);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const yesButton = document.createElement("button");
+        yesButton.textContent = "Yes";
+        yesButton.addEventListener("click", () => {
+          callback(true);
+        });
+
+        const noButton = document.createElement("button");
+        noButton.textContent = "No";
+        noButton.className = "cancel";
+        noButton.addEventListener("click", () => {
+          callback(false);
+          clearContent();
+          updateStatus("Operation canceled");
+        });
+
+        buttonGroup.appendChild(yesButton);
+        buttonGroup.appendChild(noButton);
+        confirmDiv.appendChild(buttonGroup);
+
+        content.appendChild(confirmDiv);
+      }
+
+      // Calendar and stats functions
+
+      function showLearningCalendar() {
+        clearContent();
+        loadCalendarData();
+
+        const today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+
+        // 添加状态变量来跟踪当前显示的月份和年份
+        if (!window.calendarState) {
+          window.calendarState = { month: currentMonth, year: currentYear };
+        } else {
+          currentMonth = window.calendarState.month;
+          currentYear = window.calendarState.year;
+        }
+
+        const container = document.createElement("div");
+        container.className = "calendar-container";
+
+        // Header with month/year and navigation
+        const header = document.createElement("div");
+        header.className = "calendar-header";
+
+        const title = document.createElement("h3");
+        title.textContent = `${new Date(
+          currentYear,
+          currentMonth,
+          1
+        ).toLocaleString("default", { month: "long" })} ${currentYear}`;
+        header.appendChild(title);
+
+        const nav = document.createElement("div");
+        nav.className = "calendar-nav";
+
+        const prevButton = document.createElement("button");
+        prevButton.textContent = "←";
+        prevButton.addEventListener("click", () => {
+          if (currentMonth === 0) {
+            currentMonth = 11;
+            currentYear--;
+          } else {
+            currentMonth--;
+          }
+          window.calendarState = { month: currentMonth, year: currentYear };
+          showLearningCalendar();
+        });
+
+        const nextButton = document.createElement("button");
+        nextButton.textContent = "→";
+        nextButton.addEventListener("click", () => {
+          if (currentMonth === 11) {
+            currentMonth = 0;
+            currentYear++;
+          } else {
+            currentMonth++;
+          }
+          window.calendarState = { month: currentMonth, year: currentYear };
+          showLearningCalendar();
+        });
+
+        nav.appendChild(prevButton);
+        nav.appendChild(nextButton);
+        header.appendChild(nav);
+        container.appendChild(header);
+
+        // Day names header
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const dayNamesRow = document.createElement("div");
+        dayNamesRow.className = "calendar-grid";
+
+        dayNames.forEach((day) => {
+          const dayElement = document.createElement("div");
+          dayElement.textContent = day;
+          dayElement.style.fontWeight = "bold";
+          dayNamesRow.appendChild(dayElement);
+        });
+
+        container.appendChild(dayNamesRow);
+
+        // Calendar grid
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const daysInMonth = new Date(
+          currentYear,
+          currentMonth + 1,
+          0
+        ).getDate();
+
+        const grid = document.createElement("div");
+        grid.className = "calendar-grid";
+
+        // Empty cells for days before the first of the month
+        for (let i = 0; i < firstDay; i++) {
+          const emptyCell = document.createElement("div");
+          emptyCell.className = "calendar-day empty";
+          grid.appendChild(emptyCell);
+        }
+
+        // Days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(
+            2,
+            "0"
+          )}-${String(day).padStart(2, "0")}`;
+          const dayData = calendarData[dateStr];
+
+          const dayElement = document.createElement("div");
+          dayElement.className = "calendar-day";
+
+          const dayNumber = document.createElement("div");
+          dayNumber.textContent = day;
+          dayElement.appendChild(dayNumber);
+
+          if (
+            day === today.getDate() &&
+            currentMonth === today.getMonth() &&
+            currentYear === today.getFullYear()
+          ) {
+            dayElement.classList.add("today");
+          }
+
+          if (dayData) {
+            dayElement.classList.add("has-data");
+            dayElement.classList.add(
+              dayData.efficient ? "efficient" : "inefficient"
+            );
+
+            const dayInfo = document.createElement("div");
+            dayInfo.style.fontSize = "0.7em";
+            dayInfo.innerHTML = `
+                ${dayData.duration}min<br>
+                ${dayData.wordCount}voc(s)
+            `;
+            dayElement.appendChild(dayInfo);
+          } else {
+            const dayInfo = document.createElement("div");
+            dayInfo.style.fontSize = "0.7em";
+            dayInfo.innerHTML = `0min<br>0voc(s)`;
+            dayElement.appendChild(dayInfo);
+          }
+
+          dayElement.addEventListener("click", () => {
+            showDayDetails(dateStr, dayData);
+          });
+
+          grid.appendChild(dayElement);
+        }
+
+        container.appendChild(grid);
+
+        // Weekly stats chart
+        const statsContainer = document.createElement("div");
+        statsContainer.className = "stats-container";
+
+        const statsTitle = document.createElement("h4");
+        statsTitle.textContent = "Last 14 Days Stats";
+        statsContainer.appendChild(statsTitle);
+
+        const chart = document.createElement("div");
+        chart.className = "stats-chart";
+
+        const last14Days = getLast14Days();
+        const maxDuration = Math.max(
+          ...last14Days.map((day) => calendarData[day.date]?.duration || 0),
+          1
+        );
+
+        last14Days.forEach((day) => {
+          const dayData = calendarData[day.date];
+          const hasData =
+            dayData && (dayData.duration > 0 || dayData.wordCount > 0);
+
+          // 替换原有的bar创建代码
+          const bar = document.createElement("div");
+          bar.className = `chart-bar ${
+            hasData
+              ? dayData.efficient
+                ? "efficient"
+                : "inefficient"
+              : "inefficient"
+          }`;
+          bar.style.height = `${
+            hasData ? (dayData.duration / maxDuration) * 150 : 5
+          }px`;
+
+          const valueLabel = document.createElement("div");
+          valueLabel.className = "chart-value";
+          valueLabel.textContent = hasData ? dayData.duration : "0";
+          bar.appendChild(valueLabel);
+
+          const dateLabel = document.createElement("div");
+          dateLabel.className = "chart-label";
+          dateLabel.textContent = day.date.split("-").slice(1).join("/");
+          bar.appendChild(dateLabel);
+
+          chart.appendChild(bar);
+        });
+
+        statsContainer.appendChild(chart);
+        container.appendChild(statsContainer);
+
+        content.appendChild(container);
+        updateStatus("Learning calendar");
+      }
+
+      function showDayDetails(dateStr, existingData = null) {
+        clearContent();
+
+        const date = new Date(dateStr);
+        const container = document.createElement("div");
+        container.className = "input-container";
+
+        const title = document.createElement("h3");
+        title.textContent = `Learning Log - ${date.toLocaleDateString()}`;
+        container.appendChild(title);
+
+        const wordCountLabel = document.createElement("label");
+        wordCountLabel.textContent = "Words studied today:";
+        container.appendChild(wordCountLabel);
+
+        const wordCountInput = document.createElement("input");
+        wordCountInput.type = "number";
+        wordCountInput.min = "0";
+        wordCountInput.value = existingData?.wordCount || "0";
+        container.appendChild(wordCountInput);
+
+        const durationLabel = document.createElement("label");
+        durationLabel.textContent = "Study duration (minutes):";
+        container.appendChild(durationLabel);
+
+        const durationInput = document.createElement("input");
+        durationInput.type = "number";
+        durationInput.min = "0";
+        durationInput.value = existingData?.duration || "0";
+        container.appendChild(durationInput);
+
+        const efficientLabel = document.createElement("label");
+        efficientLabel.textContent = "Was this an efficient study session?";
+        container.appendChild(efficientLabel);
+
+        const efficientCheckbox = document.createElement("input");
+        efficientCheckbox.type = "checkbox";
+        efficientCheckbox.checked = existingData?.efficient || false;
+        container.appendChild(efficientCheckbox);
+
+        const buttonGroup = document.createElement("div");
+        buttonGroup.className = "button-group";
+
+        const saveButton = document.createElement("button");
+        saveButton.textContent = "Save";
+        saveButton.addEventListener("click", () => {
+          const wordCount = parseInt(wordCountInput.value) || 0;
+          const duration = parseInt(durationInput.value) || 0;
+          const efficient = efficientCheckbox.checked;
+
+          if (wordCount > 0 || duration > 0) {
+            calendarData[dateStr] = {
+              wordCount,
+              duration,
+              efficient,
+              timestamp: new Date().toISOString(),
+            };
+            saveCalendarData();
+
+            const details = document.createElement("div");
+            details.className = "day-details";
+            details.innerHTML = `
+                        <p>Words studied: ${wordCount}</p>
+                        <p>Study duration: ${duration} minutes</p>
+                        <p>Efficiency: ${
+                          efficient ? "✅ Efficient" : "❌ Not efficient"
+                        }</p>
+                    `;
+            container.appendChild(details);
+
+            updateStatus("Day data saved");
+          } else {
+            // Remove entry if both are 0
+            if (calendarData[dateStr]) {
+              delete calendarData[dateStr];
+              saveCalendarData();
+            }
+            updateStatus("Day data cleared (no words or duration)");
+          }
+
+          showLearningCalendar();
+        });
+
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "Back to Calendar";
+        cancelButton.className = "cancel";
+        cancelButton.addEventListener("click", () => {
+          showLearningCalendar();
+        });
+
+        buttonGroup.appendChild(saveButton);
+        buttonGroup.appendChild(cancelButton);
+        container.appendChild(buttonGroup);
+
+        if (existingData) {
+          const details = document.createElement("div");
+          details.className = "day-details";
+          details.innerHTML = `
+                    <p>Words studied: ${existingData.wordCount}</p>
+                    <p>Study duration: ${existingData.duration} minutes</p>
+                    <p>Efficiency: ${
+                      existingData.efficient
+                        ? "✅ Efficient"
+                        : "❌ Not efficient"
+                    }</p>
+                `;
+          container.appendChild(details);
+        }
+
+        content.appendChild(container);
+      }
+
+      function loadCalendarData() {
+        const savedData = localStorage.getItem(CALENDAR_DATA_KEY);
+        if (savedData) {
+          try {
+            calendarData = JSON.parse(savedData);
+          } catch (e) {
+            console.error("Error loading calendar data:", e);
+            calendarData = {};
+          }
+        } else {
+          calendarData = {};
+        }
+      }
+
+      function saveCalendarData() {
+        try {
+          localStorage.setItem(CALENDAR_DATA_KEY, JSON.stringify(calendarData));
+          return true;
+        } catch (e) {
+          console.error("Error saving calendar data:", e);
+          return false;
+        }
+      }
+
+      function getLast14Days() {
+        const result = [];
+        for (let i = 13; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          const dateStr = date.toISOString().split("T")[0];
+          result.push({ date: dateStr });
+        }
+        return result;
+      }
+
+      function exitProgram() {
+        if (currentUser && !currentUser.guest) {
+          if (saveData()) {
+            clearContent();
+            const goodbyeMsg = document.createElement("p");
+            goodbyeMsg.className = "correct";
+            goodbyeMsg.textContent = "Saving data... Goodbye!";
+            content.appendChild(goodbyeMsg);
+
+            setTimeout(() => {
+              clearContent();
+              const exitMsg = document.createElement("p");
+              exitMsg.textContent =
+                "Program ended (refresh page in browser to restart)";
+              content.appendChild(exitMsg);
+            }, 1000);
+          }
+        } else {
+          clearContent();
+          const exitMsg = document.createElement("p");
+          exitMsg.textContent = "Program ended (guest data not saved)";
+          content.appendChild(exitMsg);
+        }
+      }
+    </script>
+  </body>
+</html>
