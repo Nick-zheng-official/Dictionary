@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dictionary Plus Launcher</title>
+    <title>Dictionary Plus - 在线词汇管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --accent-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+            --success-color: #22c55e;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,94 +27,438 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background: #0a0a0a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
+            color: var(--text-primary);
             min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            color: #e0e0e0;
         }
 
-        .launcher-container {
-            background: #1a1a1a;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
-
-        .launcher-title {
-            font-size: 2rem;
-            margin-bottom: 15px;
-            color: #fff;
-            font-weight: 300;
-        }
-
-        .launcher-subtitle {
-            font-size: 1rem;
-            margin-bottom: 25px;
-            color: #888;
-        }
-
-        .version-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .version-btn {
-            background: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 6px;
-            padding: 12px 16px;
-            color: #e0e0e0;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-primary);
             text-decoration: none;
-            display: block;
         }
 
-        .version-btn:hover {
-            background: #3a3a3a;
-            border-color: #666;
+        .logo span {
+            color: var(--primary-color);
         }
 
-        .version-info {
-            font-size: 0.8rem;
-            color: #666;
-            margin-top: 4px;
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
         }
 
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary-color);
+        }
+
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(30, 41, 59, 0.3) 100%);
+            border-radius: 20px;
+            margin: 2rem 0;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Auth Section */
+        .auth-section {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 16px;
+            margin: 3rem 0;
+            text-align: center;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
         .footer {
-            margin-top: 25px;
-            font-size: 0.8rem;
-            color: #555;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .social-link {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .social-link:hover {
+            color: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.6s ease-out;
         }
     </style>
 </head>
 <body>
-    <div class="launcher-container">
-        <h1 class="launcher-title">📚 Dictionary Plus</h1>
-        <p class="launcher-subtitle">选择要启动的版本</p>
-        
-        <div class="version-list">
-            <a href="dictionary plus v1.0.0.html" class="version-btn">
-                🚀 稳定版本 v1.0.0
-                <div class="version-info">功能完整的稳定版本</div>
-            </a>
-            
-            <a href="past versions/dictionary plus v0.1.0-beta.html" class="version-btn">
-                ⚡ 测试版本 v0.1.0-beta
-                <div class="version-info">早期测试版本，功能较少</div>
-            </a>
-        </div>
-        
-        <p class="footer">© 2024 Dictionary Plus - 所有版本启动器</p>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav">
+            <a href="#" class="logo">Dictionary<span>Plus</span></a>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">功能</a>
+                <a href="#about" class="nav-link">关于</a>
+                <a href="#contact" class="nav-link">联系</a>
+                <a href="Dictionary Launcher.html" class="btn btn-outline">
+                    <i class="fas fa-rocket"></i>启动应用
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero animate-fadeIn">
+            <h1>智能词汇管理平台</h1>
+            <p>现代化的在线词汇学习系统，帮助您高效管理、学习和记忆单词</p>
+            <div class="auth-buttons">
+                <a href="Dictionary Launcher.html" class="btn btn-primary">
+                    <i class="fas fa-play"></i>立即开始
+                </a>
+                <a href="#features" class="btn btn-outline">
+                    <i class="fas fa-info-circle"></i>了解更多
+                </a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="features">
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3>词汇管理</h3>
+                <p>轻松添加、编辑和删除单词，支持批量导入导出，智能分类管理</p>
+            </div>
+
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>智能学习</h3>
+                <p>基于遗忘曲线的智能复习系统，个性化学习计划，提高记忆效率</p>
+            </div>
+
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>学习统计</h3>
+                <p>详细的学习数据分析，进度跟踪，可视化报表帮助您了解学习情况</p>
+            </div>
+
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>多用户支持</h3>
+                <p>支持多个用户同时使用，管理员权限管理，数据隔离安全可靠</p>
+            </div>
+
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>响应式设计</h3>
+                <p>完美适配各种设备，电脑、平板、手机均可流畅使用</p>
+            </div>
+
+            <div class="feature-card animate-fadeIn">
+                <div class="feature-icon">
+                    <i class="fas fa-cloud"></i>
+                </div>
+                <h3>云端同步</h3>
+                <p>数据自动同步，多设备无缝切换，永不丢失学习进度</p>
+            </div>
+        </section>
+
+        <!-- Auth Section -->
+        <section class="auth-section animate-fadeIn">
+            <h2>立即开始您的词汇学习之旅</h2>
+            <p>选择适合您的方式开始使用Dictionary Plus</p>
+            <div class="auth-buttons">
+                <a href="Dictionary Launcher.html" class="btn btn-primary">
+                    <i class="fas fa-user"></i>用户登录
+                </a>
+                <a href="Dictionary Launcher.html" class="btn btn-outline">
+                    <i class="fas fa-crown"></i>管理员登录
+                </a>
+                <a href="Dictionary Launcher.html" class="btn btn-outline">
+                    <i class="fas fa-user-secret"></i>访客体验
+                </a>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="auth-section animate-fadeIn">
+            <h2>关于 Dictionary Plus</h2>
+            <p>Dictionary Plus 是一个功能强大的词汇管理系统，致力于帮助语言学习者更高效地管理和记忆单词。我们结合了现代学习理论和先进的技术，为您提供最佳的学习体验。</p>
+            <p>支持多种学习模式、智能复习提醒、详细的学习统计，让您的词汇学习变得更加轻松高效。</p>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="auth-section animate-fadeIn">
+            <h2>联系我们</h2>
+            <p>如有任何问题或建议，欢迎通过以下方式联系我们</p>
+            <div class="social-links">
+                <a href="https://github.com/Nick-zheng-official" class="social-link"><i class="fab fa-github"></i></a>
+                <span class="social-link" title="2181927847@qq.com"><i class="fas fa-envelope"></i></span>
+                <a href="https://space.bilibili.com/1774391338?spm_id_from=333.337.0.0" class="social-link"><i class="fab fa-bilibili"></i></a>
+            </div>
+        </section>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Dictionary Plus. 保留所有权利。</p>
+        <p>版本: v1.0.0 | 最新更新: 2024-12-20</p>
+    </footer>
+
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 导航栏激活状态
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // 动画效果
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.animate-fadeIn').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease-out';
+            observer.observe(el);
+        });
+
+        // 邮箱点击显示功能
+        document.querySelector('.social-link[title="2181927847@qq.com"]').addEventListener('click', function() {
+            alert('邮箱地址: 2181927847@qq.com');
+        });
+
+        console.log('Dictionary Plus Website Loaded');
+    </script>
 </body>
 </html>
