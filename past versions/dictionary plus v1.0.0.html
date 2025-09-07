@@ -853,13 +853,15 @@
 
         // Initialize event listeners for login screen
         userLoginBtn.addEventListener("click", () => {
-          userLoginForm.classList.toggle("show");
-          adminLoginForm.classList.remove("show");
+          userLoginForm.style.display = "block";
+          adminLoginForm.style.display = "none";
+          registerForm.style.display = "none";
         });
 
         adminLoginBtn.addEventListener("click", () => {
-          adminLoginForm.classList.toggle("show");
-          userLoginForm.classList.remove("show");
+          adminLoginForm.style.display = "block";
+          userLoginForm.style.display = "none";
+          registerForm.style.display = "none";
         });
 
         guestLoginBtn.addEventListener("click", () => {
@@ -1065,7 +1067,7 @@
         if (saveUserData()) {
           // 显示成功消息并返回登录界面
           errorElement.style.color = '#00ff00';
-          errorElement.textContent = '注册成功！请使用您的账号登录。';
+          errorElement.textContent = 'Registration successful! Please login with your account.';
           errorElement.style.display = 'block';
           
           // 清空注册表单
